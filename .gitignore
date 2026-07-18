@@ -7,6 +7,17 @@
 .buildlog/
 .history
 
+# ── Secrets (never commit) ───────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+**/env.js
+!**/env.example.js
+**/local.properties
+**/key.properties
+**/*.keystore
+**/*.jks
+
 
 
 # Flutter repo-specific
