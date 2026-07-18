@@ -3,7 +3,60 @@
 -- Run AFTER schema.sql in the Supabase SQL Editor.
 -- ============================================================
 
+-- Apply this block independently when schema.sql was already run before the
+-- auth profile trigger was added.
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles AS p (id, email, name, phone, role, platform_access)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data ->> 'name', ''),
+    COALESCE(NEW.raw_user_meta_data ->> 'phone', ''),
+    'employee',
+    'granted'
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    name = COALESCE(NULLIF(EXCLUDED.name, ''), p.name),
+    phone = COALESCE(NULLIF(EXCLUDED.phone, ''), p.phone);
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Repair users created before this trigger existed.
+INSERT INTO public.profiles (id, email, name, phone, role, platform_access)
+SELECT
+  u.id,
+  u.email,
+  COALESCE(u.raw_user_meta_data ->> 'name', ''),
+  COALESCE(u.raw_user_meta_data ->> 'phone', ''),
+  'employee',
+  'granted'
+FROM auth.users u
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.profiles p WHERE p.id = u.id
+);
+
 -- Admins can update any profile in their org (grant/revoke access)
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+CREATE POLICY "Users can insert own profile" ON profiles
+  FOR INSERT TO authenticated WITH CHECK (id = auth.uid());
+
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE TO authenticated USING (id = auth.uid());
+
 DROP POLICY IF EXISTS "profiles update by admin" ON profiles;
 CREATE POLICY "profiles update by admin" ON profiles
   FOR UPDATE TO authenticated

@@ -41,18 +41,19 @@ class ReportsScreen extends ConsumerWidget {
               .toList();
           final totalTrips = completed.length;
           final totalKm = completed.fold<double>(
-              0, (sum, t) => sum + (t.ride.distanceKm ?? 0));
+            0,
+            (sum, t) => sum + (t.ride.distanceKm ?? 0),
+          );
           final totalSpent = completed.fold<double>(
-              0,
-              (sum, t) =>
-                  sum + (t.isDriver ? 0 : (t.booking?.totalFare ?? 0)));
+            0,
+            (sum, t) => sum + (t.isDriver ? 0 : (t.booking?.totalFare ?? 0)),
+          );
           final totalEarned = completed.fold<double>(
-              0,
-              (sum, t) => !t.isDriver
-                  ? sum
-                  : sum +
-                      t.passengers.fold<double>(
-                          0, (s, p) => s + p.totalFare));
+            0,
+            (sum, t) => !t.isDriver
+                ? sum
+                : sum + t.passengers.fold<double>(0, (s, p) => s + p.totalFare),
+          );
           final fuelSaved = totalKm * _fuelCostPerKm - totalSpent;
           final co2Saved = totalKm * _co2PerKm;
 
@@ -65,30 +66,37 @@ class ReportsScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    _statCard('Total Trips', '$totalTrips',
-                        Icons.route_outlined, AppColors.primary),
+                    _statCard(
+                      'Total Trips',
+                      '$totalTrips',
+                      Icons.route_outlined,
+                      AppColors.primary,
+                    ),
                     const SizedBox(width: AppSpacing.md),
                     _statCard(
-                        'Distance',
-                        '${totalKm.toStringAsFixed(0)} km',
-                        Icons.straighten,
-                        AppColors.secondary),
+                      'Distance',
+                      '${totalKm.toStringAsFixed(0)} km',
+                      Icons.straighten,
+                      AppColors.secondary,
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
                     _statCard(
-                        'CO₂ Saved',
-                        '${co2Saved.toStringAsFixed(1)} kg',
-                        Icons.eco_outlined,
-                        AppColors.success),
+                      'CO₂ Saved',
+                      '${co2Saved.toStringAsFixed(1)} kg',
+                      Icons.eco_outlined,
+                      AppColors.success,
+                    ),
                     const SizedBox(width: AppSpacing.md),
                     _statCard(
-                        'Est. Savings',
-                        '₹ ${fuelSaved.clamp(0, double.infinity).toStringAsFixed(0)}',
-                        Icons.savings_outlined,
-                        AppColors.warning),
+                      'Est. Savings',
+                      '₹ ${fuelSaved.clamp(0, double.infinity).toStringAsFixed(0)}',
+                      Icons.savings_outlined,
+                      AppColors.warning,
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xxl),
@@ -111,15 +119,20 @@ class ReportsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       children: [
-                        _finRow('Total spent on rides',
-                            '₹ ${totalSpent.toStringAsFixed(0)}'),
-                        const Divider(),
-                        _finRow('Total earned as driver',
-                            '₹ ${totalEarned.toStringAsFixed(0)}'),
+                        _finRow(
+                          'Total spent on rides',
+                          '₹ ${totalSpent.toStringAsFixed(0)}',
+                        ),
                         const Divider(),
                         _finRow(
-                            'Estimated solo-drive cost',
-                            '₹ ${(totalKm * _fuelCostPerKm).toStringAsFixed(0)}'),
+                          'Total earned as driver',
+                          '₹ ${totalEarned.toStringAsFixed(0)}',
+                        ),
+                        const Divider(),
+                        _finRow(
+                          'Estimated solo-drive cost',
+                          '₹ ${(totalKm * _fuelCostPerKm).toStringAsFixed(0)}',
+                        ),
                         const Divider(),
                         _finRow(
                           'Net savings from carpooling',
@@ -164,10 +177,12 @@ class ReportsScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: highlight
-                  ? AppTypography.labelLarge
-                  : AppTypography.bodyMedium),
+          Text(
+            label,
+            style: highlight
+                ? AppTypography.labelLarge
+                : AppTypography.bodyMedium,
+          ),
           Text(
             value,
             style: AppTypography.labelLarge.copyWith(
@@ -189,17 +204,16 @@ class _MonthlyTripsChart extends StatelessWidget {
     // Last 6 months buckets.
     final now = DateTime.now();
     final months = List.generate(
-        6, (i) => DateTime(now.year, now.month - 5 + i));
-    final counts = {
-      for (final m in months) '${m.year}-${m.month}': 0,
-    };
+      6,
+      (i) => DateTime(now.year, now.month - 5 + i),
+    );
+    final counts = {for (final m in months) '${m.year}-${m.month}': 0};
     for (final trip in trips) {
       final d = trip.ride.departureTime;
       final key = '${d.year}-${d.month}';
       if (counts.containsKey(key)) counts[key] = counts[key]! + 1;
     }
-    final maxCount =
-        counts.values.fold<int>(0, (m, v) => v > m ? v : m);
+    final maxCount = counts.values.fold<int>(0, (m, v) => v > m ? v : m);
 
     return BarChart(
       BarChartData(
@@ -212,19 +226,19 @@ class _MonthlyTripsChart extends StatelessWidget {
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 28,
               interval: 1,
-              getTitlesWidget: (v, _) => Text(
-                v.toInt().toString(),
-                style: AppTypography.caption,
-              ),
+              getTitlesWidget: (v, _) =>
+                  Text(v.toInt().toString(), style: AppTypography.caption),
             ),
           ),
           bottomTitles: AxisTitles(

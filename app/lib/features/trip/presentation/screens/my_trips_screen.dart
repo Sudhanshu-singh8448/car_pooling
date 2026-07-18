@@ -42,8 +42,7 @@ class MyTripsScreen extends ConsumerWidget {
             child: ListView.builder(
               padding: const EdgeInsets.all(AppSpacing.screenPadding),
               itemCount: trips.length,
-              itemBuilder: (context, index) =>
-                  TripCard(trip: trips[index]),
+              itemBuilder: (context, index) => TripCard(trip: trips[index]),
             ),
           );
         },
@@ -64,8 +63,11 @@ class MyTripsScreen extends ConsumerWidget {
                 color: AppColors.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.route_outlined,
-                  size: 48, color: AppColors.primary),
+              child: const Icon(
+                Icons.route_outlined,
+                size: 48,
+                color: AppColors.primary,
+              ),
             ),
             const SizedBox(height: AppSpacing.xxl),
             Text('No active trips', style: AppTypography.h3),
@@ -130,13 +132,14 @@ class TripCard extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm, vertical: 2),
+                      horizontal: AppSpacing.sm,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: trip.isDriver
                           ? AppColors.secondary.withValues(alpha: 0.1)
                           : AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusSm),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                     child: Text(
                       trip.isDriver ? 'DRIVER' : 'PASSENGER',
@@ -151,16 +154,19 @@ class TripCard extends StatelessWidget {
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm, vertical: 2),
+                      horizontal: AppSpacing.sm,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.1),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusSm),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                     child: Text(
                       _statusLabels[status] ?? status,
-                      style: AppTypography.caption
-                          .copyWith(color: color, fontWeight: FontWeight.w600),
+                      style: AppTypography.caption.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -168,56 +174,74 @@ class TripCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
-                  const Icon(Icons.trip_origin,
-                      size: 16, color: AppColors.success),
+                  const Icon(
+                    Icons.trip_origin,
+                    size: 16,
+                    color: AppColors.success,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: Text(trip.ride.pickup.address,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.bodySmall
-                            .copyWith(color: AppColors.textPrimary)),
+                    child: Text(
+                      trip.ride.pickup.address,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xs),
               Row(
                 children: [
-                  const Icon(Icons.location_on,
-                      size: 16, color: AppColors.error),
+                  const Icon(
+                    Icons.location_on,
+                    size: 16,
+                    color: AppColors.error,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: Text(trip.ride.destination.address,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.bodySmall
-                            .copyWith(color: AppColors.textPrimary)),
+                    child: Text(
+                      trip.ride.destination.address,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
-                  const Icon(Icons.schedule,
-                      size: 14, color: AppColors.textSecondary),
+                  const Icon(
+                    Icons.schedule,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    DateFormat('EEE, d MMM • h:mm a')
-                        .format(trip.ride.departureTime),
+                    DateFormat(
+                      'EEE, d MMM • h:mm a',
+                    ).format(trip.ride.departureTime),
                     style: AppTypography.caption,
                   ),
                   const Spacer(),
                   if (trip.isDriver)
                     Text(
                       '${trip.passengers.length} passenger${trip.passengers.length == 1 ? '' : 's'}',
-                      style: AppTypography.caption
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     )
                   else
                     Text(
                       '₹ ${trip.booking!.totalFare.toStringAsFixed(0)}',
-                      style: AppTypography.labelMedium
-                          .copyWith(color: AppColors.primary),
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
                 ],
               ),

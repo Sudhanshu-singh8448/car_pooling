@@ -30,17 +30,14 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
     final bookingId = widget.trip.booking?.id;
     if (bookingId == null) return;
 
-    final error = await ref.read(paymentNotifierProvider.notifier).payForBooking(
-          bookingId: bookingId,
-          amount: _fare,
-          method: _method,
-        );
+    final error = await ref
+        .read(paymentNotifierProvider.notifier)
+        .payForBooking(bookingId: bookingId, amount: _fare, method: _method);
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(error),
-        backgroundColor: AppColors.error,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: AppColors.error),
+      );
       return;
     }
     ref.invalidate(activeTripsProvider);
@@ -76,19 +73,21 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
   }
 
   String _methodLabel(String method) => switch (method) {
-        'wallet' => 'Wallet',
-        'cash' => 'Cash',
-        'card' => 'Card',
-        'upi' => 'UPI',
-        _ => method,
-      };
+    'wallet' => 'Wallet',
+    'cash' => 'Cash',
+    'card' => 'Card',
+    'upi' => 'UPI',
+    _ => method,
+  };
 
   @override
   Widget build(BuildContext context) {
     final isBusy = ref.watch(paymentNotifierProvider);
     final walletAsync = ref.watch(walletProvider);
     final walletBalance = walletAsync.valueOrNull?.balance ?? 0;
-    final gatewayNote = kIsWeb ? 'Razorpay (Test Mode — simulated)' : 'Razorpay (Test Mode)';
+    final gatewayNote = kIsWeb
+        ? 'Razorpay (Test Mode — simulated)'
+        : 'Razorpay (Test Mode)';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -113,8 +112,9 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
                     Text('Amount to pay', style: AppTypography.labelLarge),
                     Text(
                       '₹ ${_fare.toStringAsFixed(0)}',
-                      style:
-                          AppTypography.h3.copyWith(color: AppColors.primary),
+                      style: AppTypography.h3.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
                   ],
                 ),
@@ -164,7 +164,9 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: AppColors.white),
+                          strokeWidth: 2,
+                          color: AppColors.white,
+                        ),
                       )
                     : Text('Pay ₹ ${_fare.toStringAsFixed(0)}'),
               ),
@@ -203,9 +205,11 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
         ),
         title: Row(
           children: [
-            Icon(icon,
-                size: 20,
-                color: enabled ? AppColors.primary : AppColors.textTertiary),
+            Icon(
+              icon,
+              size: 20,
+              color: enabled ? AppColors.primary : AppColors.textTertiary,
+            ),
             const SizedBox(width: AppSpacing.md),
             Text(title, style: AppTypography.labelLarge),
             if (trailing != null) ...[const Spacer(), trailing],

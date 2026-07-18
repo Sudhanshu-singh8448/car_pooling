@@ -28,8 +28,9 @@ class TripRemoteDataSource {
 
     return (data as List).map((row) {
       final map = Map<String, dynamic>.from(row as Map);
-      final ride =
-          RideEntity.fromMap(Map<String, dynamic>.from(map['rides'] as Map));
+      final ride = RideEntity.fromMap(
+        Map<String, dynamic>.from(map['rides'] as Map),
+      );
       return TripEntity(
         ride: ride,
         isDriver: false,
@@ -40,12 +41,14 @@ class TripRemoteDataSource {
 
   /// Trips where the user is the driver.
   Future<List<TripEntity>> getDriverTrips({required bool active}) async {
-    final statuses =
-        active ? ['published', 'in_progress'] : ['completed', 'cancelled'];
+    final statuses = active
+        ? ['published', 'in_progress']
+        : ['completed', 'cancelled'];
     final data = await _client
         .from('rides')
         .select(
-            '$_rideSelect, bookings(*, profiles!bookings_passenger_id_fkey(name, avatar_url, phone))')
+          '$_rideSelect, bookings(*, profiles!bookings_passenger_id_fkey(name, avatar_url, phone))',
+        )
         .eq('driver_id', _userId)
         .eq('is_deleted', false)
         .inFilter('status', statuses)
@@ -55,8 +58,9 @@ class TripRemoteDataSource {
       final map = Map<String, dynamic>.from(row as Map);
       final ride = RideEntity.fromMap(map);
       final bookings = (map['bookings'] as List? ?? [])
-          .map((b) =>
-              TripPassenger.fromMap(Map<String, dynamic>.from(b as Map)))
+          .map(
+            (b) => TripPassenger.fromMap(Map<String, dynamic>.from(b as Map)),
+          )
           .where((p) => p.bookingStatus != 'cancelled')
           .toList();
       return TripEntity(ride: ride, isDriver: true, passengers: bookings);
@@ -66,10 +70,10 @@ class TripRemoteDataSource {
   /// Driver starts the trip: ride + all booked bookings → in_progress.
   Future<void> startRide(String rideId) async {
     final now = DateTime.now().toUtc().toIso8601String();
-    await _client.from('rides').update({
-      'status': 'in_progress',
-      'updated_at': now,
-    }).eq('id', rideId);
+    await _client
+        .from('rides')
+        .update({'status': 'in_progress', 'updated_at': now})
+        .eq('id', rideId);
     await _client
         .from('bookings')
         .update({'status': 'in_progress', 'started_at': now, 'updated_at': now})
@@ -81,17 +85,13 @@ class TripRemoteDataSource {
   /// (awaiting payment).
   Future<void> completeRide(String rideId) async {
     final now = DateTime.now().toUtc().toIso8601String();
-    await _client.from('rides').update({
-      'status': 'completed',
-      'updated_at': now,
-    }).eq('id', rideId);
+    await _client
+        .from('rides')
+        .update({'status': 'completed', 'updated_at': now})
+        .eq('id', rideId);
     await _client
         .from('bookings')
-        .update({
-          'status': 'completed',
-          'completed_at': now,
-          'updated_at': now,
-        })
+        .update({'status': 'completed', 'completed_at': now, 'updated_at': now})
         .eq('ride_id', rideId)
         .inFilter('status', ['booked', 'in_progress']);
   }
@@ -99,10 +99,10 @@ class TripRemoteDataSource {
   /// Driver cancels the ride; all active bookings are cancelled too.
   Future<void> cancelRide(String rideId, {String? reason}) async {
     final now = DateTime.now().toUtc().toIso8601String();
-    await _client.from('rides').update({
-      'status': 'cancelled',
-      'updated_at': now,
-    }).eq('id', rideId);
+    await _client
+        .from('rides')
+        .update({'status': 'cancelled', 'updated_at': now})
+        .eq('id', rideId);
     await _client
         .from('bookings')
         .update({
@@ -117,10 +117,10 @@ class TripRemoteDataSource {
 
   /// Passenger cancels their booking (seats restored via RPC).
   Future<void> cancelBooking(String bookingId, {String? reason}) async {
-    await _client.rpc('cancel_booking', params: {
-      'p_booking_id': bookingId,
-      'p_reason': reason,
-    });
+    await _client.rpc(
+      'cancel_booking',
+      params: {'p_booking_id': bookingId, 'p_reason': reason},
+    );
   }
 
   // ---------- Live tracking ----------

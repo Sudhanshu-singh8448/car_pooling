@@ -35,8 +35,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       duration: const Duration(milliseconds: 800),
     );
     _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
-    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
   }
 
@@ -53,7 +55,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     ref.read(authNotifierProvider.notifier).clearError();
 
-    final success = await ref.read(authNotifierProvider.notifier).signIn(
+    final success = await ref
+        .read(authNotifierProvider.notifier)
+        .signIn(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
@@ -106,7 +110,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       const SizedBox(height: 16),
                       Text(
                         'Welcome',
-                        style: AppTypography.h2.copyWith(color: AppColors.white),
+                        style: AppTypography.h2.copyWith(
+                          color: AppColors.white,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -134,7 +140,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       padding: const EdgeInsets.all(AppSpacing.xxl),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusXl,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.black.withValues(alpha: 0.08),
@@ -161,19 +169,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 padding: const EdgeInsets.all(AppSpacing.md),
                                 decoration: BoxDecoration(
                                   color: AppColors.error.withValues(alpha: 0.1),
-                                  borderRadius:
-                                      BorderRadius.circular(AppSpacing.radiusSm),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm,
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.error_outline,
-                                        color: AppColors.error, size: 20),
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: AppColors.error,
+                                      size: 20,
+                                    ),
                                     const SizedBox(width: AppSpacing.sm),
                                     Expanded(
                                       child: Text(
                                         authState.errorMessage!,
-                                        style: AppTypography.bodySmall
-                                            .copyWith(color: AppColors.error),
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: AppColors.error,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -187,9 +200,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
-                              validator: Validators.emailOrPhone,
+                              validator: Validators.email,
                               decoration: const InputDecoration(
-                                hintText: 'Email / Mobile',
+                                hintText: 'Email used during registration',
                                 prefixIcon: Icon(Icons.email_outlined),
                               ),
                             ),
@@ -212,7 +225,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                         : Icons.visibility_outlined,
                                   ),
                                   onPressed: () => setState(
-                                      () => _obscurePassword = !_obscurePassword),
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
                                 ),
                               ),
                             ),
@@ -222,7 +236,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             SizedBox(
                               height: 52,
                               child: ElevatedButton(
-                                onPressed: authState.isLoading ? null : _handleLogin,
+                                onPressed: authState.isLoading
+                                    ? null
+                                    : _handleLogin,
                                 child: authState.isLoading
                                     ? const SizedBox(
                                         width: 22,
@@ -243,9 +259,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 const Expanded(child: Divider()),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.lg),
-                                  child: Text('Or',
-                                      style: AppTypography.bodySmall),
+                                    horizontal: AppSpacing.lg,
+                                  ),
+                                  child: Text(
+                                    'Or',
+                                    style: AppTypography.bodySmall,
+                                  ),
                                 ),
                                 const Expanded(child: Divider()),
                               ],
@@ -258,8 +277,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 onPressed: () => context.go(RouteNames.signUp),
                                 child: Text(
                                   'Create New Account',
-                                  style: AppTypography.labelMedium
-                                      .copyWith(color: AppColors.primary),
+                                  style: AppTypography.labelMedium.copyWith(
+                                    color: AppColors.primary,
+                                  ),
                                 ),
                               ),
                             ),

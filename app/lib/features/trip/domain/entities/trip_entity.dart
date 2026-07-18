@@ -63,8 +63,12 @@ class TripEntity extends Equatable {
   bool get isActive => isDriver
       ? (ride.status == 'published' || ride.status == 'in_progress')
       : (booking != null &&
-          ['booked', 'in_progress', 'completed', 'payment_pending']
-              .contains(booking!.status));
+            [
+              'booked',
+              'in_progress',
+              'completed',
+              'payment_pending',
+            ].contains(booking!.status));
 
   bool get needsPayment =>
       !isDriver &&

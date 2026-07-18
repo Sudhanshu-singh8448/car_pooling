@@ -36,8 +36,9 @@ class TripFinishScreen extends ConsumerWidget {
               child: walletAsync.when(
                 data: (w) => Text(
                   'Wallet: ₹ ${w.balance.toStringAsFixed(0)}',
-                  style: AppTypography.labelMedium
-                      .copyWith(color: AppColors.primary),
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
                 ),
                 loading: () => const SizedBox.shrink(),
                 error: (_, _) => const SizedBox.shrink(),
@@ -62,23 +63,35 @@ class TripFinishScreen extends ConsumerWidget {
                         color: AppColors.success.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.check_circle,
-                          size: 48, color: AppColors.success),
+                      child: const Icon(
+                        Icons.check_circle,
+                        size: 48,
+                        color: AppColors.success,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     Text('Trip Completed!', style: AppTypography.h3),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      DateFormat('EEE, d MMM • h:mm a')
-                          .format(ride.departureTime),
+                      DateFormat(
+                        'EEE, d MMM • h:mm a',
+                      ).format(ride.departureTime),
                       style: AppTypography.bodySmall,
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    _row(Icons.trip_origin, AppColors.success, 'Pickup Point',
-                        ride.pickup.address),
+                    _row(
+                      Icons.trip_origin,
+                      AppColors.success,
+                      'Pickup Point',
+                      ride.pickup.address,
+                    ),
                     const SizedBox(height: AppSpacing.md),
-                    _row(Icons.location_on, AppColors.error, 'Drop Point',
-                        ride.destination.address),
+                    _row(
+                      Icons.location_on,
+                      AppColors.error,
+                      'Drop Point',
+                      ride.destination.address,
+                    ),
                     const Divider(height: AppSpacing.xxxl),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -86,8 +99,9 @@ class TripFinishScreen extends ConsumerWidget {
                         Text('Total Fare', style: AppTypography.labelLarge),
                         Text(
                           '₹ ${fare.toStringAsFixed(0)}',
-                          style: AppTypography.h2
-                              .copyWith(color: AppColors.primary),
+                          style: AppTypography.h2.copyWith(
+                            color: AppColors.primary,
+                          ),
                         ),
                       ],
                     ),
@@ -130,11 +144,14 @@ class TripFinishScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label, style: AppTypography.caption),
-              Text(value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.textPrimary)),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
             ],
           ),
         ),

@@ -106,8 +106,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.account_balance_wallet_outlined,
-                    size: 18, color: AppColors.primary),
+                const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   ref.watch(walletProvider).valueOrNull != null
@@ -142,10 +145,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(
-          height: 1,
-          color: AppColors.border,
-        ),
+        child: Container(height: 1, color: AppColors.border),
       ),
     );
   }
@@ -175,7 +175,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const SizedBox(height: AppSpacing.xxl),
                 CircleAvatar(
                   radius: 36,
-                  backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
+                  backgroundColor: AppColors.primaryLight.withValues(
+                    alpha: 0.2,
+                  ),
                   child: Text(
                     user?.name.isNotEmpty == true
                         ? user!.name[0].toUpperCase()
@@ -190,16 +192,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const SizedBox(height: AppSpacing.xxl),
                 const Divider(),
                 ListTile(
-                  leading:
-                      const Icon(Icons.logout, color: AppColors.error),
-                  title: Text('Logout',
-                      style: AppTypography.bodyLarge
-                          .copyWith(color: AppColors.error)),
+                  leading: const Icon(Icons.logout, color: AppColors.error),
+                  title: Text(
+                    'Logout',
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
                   onTap: () async {
                     Navigator.pop(ctx);
-                    await ref
-                        .read(authNotifierProvider.notifier)
-                        .signOut();
+                    await ref.read(authNotifierProvider.notifier).signOut();
                     if (mounted) {
                       context.go(RouteNames.login);
                     }
@@ -234,16 +236,36 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(0, Icons.dashboard_outlined,
-                  Icons.dashboard_rounded, 'Dashboard'),
-              _buildNavItem(1, Icons.route_outlined, Icons.route_rounded,
-                  'My Trips'),
-              _buildNavItem(2, Icons.history_outlined, Icons.history_rounded,
-                  'History'),
-              _buildNavItem(3, Icons.directions_car_outlined,
-                  Icons.directions_car_rounded, 'Vehicle'),
-              _buildNavItem(4, Icons.settings_outlined,
-                  Icons.settings_rounded, 'Settings'),
+              _buildNavItem(
+                0,
+                Icons.dashboard_outlined,
+                Icons.dashboard_rounded,
+                'Dashboard',
+              ),
+              _buildNavItem(
+                1,
+                Icons.route_outlined,
+                Icons.route_rounded,
+                'My Trips',
+              ),
+              _buildNavItem(
+                2,
+                Icons.history_outlined,
+                Icons.history_rounded,
+                'History',
+              ),
+              _buildNavItem(
+                3,
+                Icons.directions_car_outlined,
+                Icons.directions_car_rounded,
+                'Vehicle',
+              ),
+              _buildNavItem(
+                4,
+                Icons.settings_outlined,
+                Icons.settings_rounded,
+                'Settings',
+              ),
             ],
           ),
         ),
@@ -252,7 +274,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildNavItem(
-      int index, IconData icon, IconData activeIcon, String label) {
+    int index,
+    IconData icon,
+    IconData activeIcon,
+    String label,
+  ) {
     final isActive = _currentIndex == index;
     return InkWell(
       onTap: () => _onTabTapped(index),

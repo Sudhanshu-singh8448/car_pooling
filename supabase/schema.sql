@@ -4,6 +4,38 @@
 -- Assumes the `profiles` table from Phase 1 already exists.
 -- ============================================================
 
+-- Create the application profile inside the auth transaction. This works
+-- even when Supabase email confirmation is enabled and the client has no
+-- authenticated session yet.
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles AS p (id, email, name, phone, role, platform_access)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data ->> 'name', ''),
+    COALESCE(NEW.raw_user_meta_data ->> 'phone', ''),
+    'employee',
+    'granted'
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    name = COALESCE(NULLIF(EXCLUDED.name, ''), p.name),
+    phone = COALESCE(NULLIF(EXCLUDED.phone, ''), p.phone);
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- ---------- ORGANIZATIONS ----------
 CREATE TABLE IF NOT EXISTS organizations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -215,6 +247,14 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Authenticated can read profiles" ON profiles;
 CREATE POLICY "Authenticated can read profiles" ON profiles
   FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+CREATE POLICY "Users can insert own profile" ON profiles
+  FOR INSERT TO authenticated WITH CHECK (id = auth.uid());
+
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE TO authenticated USING (id = auth.uid());
 
 -- Organizations: readable by all authenticated; admins update
 CREATE POLICY "org read" ON organizations FOR SELECT TO authenticated USING (true);

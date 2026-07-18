@@ -50,15 +50,18 @@ class TripActionNotifier extends StateNotifier<bool> {
       _run(() => _ref.read(tripRepositoryProvider).completeRide(rideId));
 
   Future<String?> cancelRide(String rideId, {String? reason}) => _run(
-      () => _ref.read(tripRepositoryProvider).cancelRide(rideId, reason: reason));
+    () => _ref.read(tripRepositoryProvider).cancelRide(rideId, reason: reason),
+  );
 
-  Future<String?> cancelBooking(String bookingId, {String? reason}) =>
-      _run(() => _ref
-          .read(tripRepositoryProvider)
-          .cancelBooking(bookingId, reason: reason));
+  Future<String?> cancelBooking(String bookingId, {String? reason}) => _run(
+    () => _ref
+        .read(tripRepositoryProvider)
+        .cancelBooking(bookingId, reason: reason),
+  );
 }
 
-final tripActionProvider =
-    StateNotifierProvider<TripActionNotifier, bool>((ref) {
+final tripActionProvider = StateNotifierProvider<TripActionNotifier, bool>((
+  ref,
+) {
   return TripActionNotifier(ref);
 });

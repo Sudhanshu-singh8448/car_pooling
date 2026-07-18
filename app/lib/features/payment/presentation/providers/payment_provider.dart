@@ -8,8 +8,9 @@ final paymentGatewayProvider = Provider<PaymentGatewayService>((ref) {
   return PaymentGatewayService();
 });
 
-final paymentRemoteDataSourceProvider =
-    Provider<PaymentRemoteDataSource>((ref) {
+final paymentRemoteDataSourceProvider = Provider<PaymentRemoteDataSource>((
+  ref,
+) {
   return PaymentRemoteDataSource(ref.read(supabaseClientProvider));
 });
 
@@ -45,7 +46,9 @@ class PaymentNotifier extends StateNotifier<bool> {
         case 'card':
         case 'upi':
           final user = _ref.read(authNotifierProvider).user;
-          final result = await _ref.read(paymentGatewayProvider).checkout(
+          final result = await _ref
+              .read(paymentGatewayProvider)
+              .checkout(
                 amount: amount,
                 description: 'Ride payment',
                 userEmail: user?.email,
@@ -83,7 +86,9 @@ class PaymentNotifier extends StateNotifier<bool> {
     state = true;
     try {
       final user = _ref.read(authNotifierProvider).user;
-      final result = await _ref.read(paymentGatewayProvider).checkout(
+      final result = await _ref
+          .read(paymentGatewayProvider)
+          .checkout(
             amount: amount,
             description: 'Wallet recharge',
             userEmail: user?.email,
@@ -105,7 +110,8 @@ class PaymentNotifier extends StateNotifier<bool> {
   }
 }
 
-final paymentNotifierProvider =
-    StateNotifierProvider<PaymentNotifier, bool>((ref) {
+final paymentNotifierProvider = StateNotifierProvider<PaymentNotifier, bool>((
+  ref,
+) {
   return PaymentNotifier(ref);
 });

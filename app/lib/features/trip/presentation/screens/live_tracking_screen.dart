@@ -22,8 +22,7 @@ class LiveTrackingScreen extends ConsumerStatefulWidget {
   const LiveTrackingScreen({super.key, required this.trip});
 
   @override
-  ConsumerState<LiveTrackingScreen> createState() =>
-      _LiveTrackingScreenState();
+  ConsumerState<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
 }
 
 class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
@@ -69,23 +68,29 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        setState(() => _statusMessage =
-            'Location permission denied. Enable it to share your position.');
+        setState(
+          () => _statusMessage =
+              'Location permission denied. Enable it to share your position.',
+        );
         return;
       }
 
-      _positionSub = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
-        ),
-      ).listen((position) {
-        _onDriverPosition(position);
-      }, onError: (_) {
-        if (mounted) {
-          setState(() => _statusMessage = 'GPS signal lost. Retrying...');
-        }
-      });
+      _positionSub =
+          Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter: 10,
+            ),
+          ).listen(
+            (position) {
+              _onDriverPosition(position);
+            },
+            onError: (_) {
+              if (mounted) {
+                setState(() => _statusMessage = 'GPS signal lost. Retrying...');
+              }
+            },
+          );
       setState(() {
         _isBroadcasting = true;
         _statusMessage = 'Sharing live location with passengers';
@@ -104,7 +109,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
     if (DateTime.now().difference(_lastPublish).inSeconds >= 4) {
       _lastPublish = DateTime.now();
       try {
-        await ref.read(tripRepositoryProvider).publishLocation(
+        await ref
+            .read(tripRepositoryProvider)
+            .publishLocation(
               rideId: trip.ride.id,
               latitude: position.latitude,
               longitude: position.longitude,
@@ -122,12 +129,15 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   Future<void> _startListening() async {
     setState(() => _statusMessage = 'Waiting for driver location...');
     // Show last known position immediately if available
-    final last =
-        await ref.read(tripRepositoryProvider).getLastLocation(trip.ride.id);
+    final last = await ref
+        .read(tripRepositoryProvider)
+        .getLastLocation(trip.ride.id);
     if (last != null && mounted) {
       _updateVehicle(
-        LatLng((last['latitude'] as num).toDouble(),
-            (last['longitude'] as num).toDouble()),
+        LatLng(
+          (last['latitude'] as num).toDouble(),
+          (last['longitude'] as num).toDouble(),
+        ),
         speedMs: (last['speed'] as num?)?.toDouble(),
       );
     }
@@ -136,8 +146,10 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
       (location) {
         if (!mounted) return;
         _updateVehicle(
-          LatLng((location['latitude'] as num).toDouble(),
-              (location['longitude'] as num).toDouble()),
+          LatLng(
+            (location['latitude'] as num).toDouble(),
+            (location['longitude'] as num).toDouble(),
+          ),
           speedMs: (location['speed'] as num?)?.toDouble(),
         );
       },
@@ -146,16 +158,18 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
 
   void _updateVehicle(LatLng position, {double? speedMs}) {
     final destination = LatLng(
-        trip.ride.destination.lat, trip.ride.destination.lng);
-    final remainingKm = MapsService.haversineKm(
+      trip.ride.destination.lat,
+      trip.ride.destination.lng,
+    );
+    final remainingKm =
+        MapsService.haversineKm(
           position.latitude,
           position.longitude,
           destination.latitude,
           destination.longitude,
         ) *
         1.3; // road factor
-    final speedKmh =
-        (speedMs != null && speedMs > 1) ? speedMs * 3.6 : 30.0;
+    final speedKmh = (speedMs != null && speedMs > 1) ? speedMs * 3.6 : 30.0;
     setState(() {
       _vehiclePosition = position;
       _speedKmh = speedMs != null ? speedMs * 3.6 : null;
@@ -192,30 +206,42 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.trip_origin,
-                        size: 16, color: AppColors.success),
+                    const Icon(
+                      Icons.trip_origin,
+                      size: 16,
+                      color: AppColors.success,
+                    ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
-                      child: Text(ride.pickup.address,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodySmall
-                              .copyWith(color: AppColors.textPrimary)),
+                      child: Text(
+                        ride.pickup.address,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    const Icon(Icons.location_on,
-                        size: 16, color: AppColors.error),
+                    const Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: AppColors.error,
+                    ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
-                      child: Text(ride.destination.address,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodySmall
-                              .copyWith(color: AppColors.textPrimary)),
+                      child: Text(
+                        ride.destination.address,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -226,15 +252,18 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
             child: Stack(
               children: [
                 GoogleMap(
-                  initialCameraPosition:
-                      CameraPosition(target: pickup, zoom: 13),
+                  initialCameraPosition: CameraPosition(
+                    target: pickup,
+                    zoom: 13,
+                  ),
                   onMapCreated: (c) => _mapController = c,
                   markers: {
                     Marker(
                       markerId: const MarkerId('pickup'),
                       position: pickup,
                       icon: BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueGreen),
+                        BitmapDescriptor.hueGreen,
+                      ),
                     ),
                     Marker(
                       markerId: const MarkerId('destination'),
@@ -245,9 +274,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                         markerId: const MarkerId('vehicle'),
                         position: _vehiclePosition!,
                         icon: BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueAzure),
-                        infoWindow:
-                            InfoWindow(title: ride.vehicleModel),
+                          BitmapDescriptor.hueAzure,
+                        ),
+                        infoWindow: InfoWindow(title: ride.vehicleModel),
                       ),
                   },
                   polylines: {
@@ -274,8 +303,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                         color: _isBroadcasting
                             ? AppColors.success.withValues(alpha: 0.95)
                             : AppColors.warning.withValues(alpha: 0.95),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusMd,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -290,8 +320,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                           Expanded(
                             child: Text(
                               _statusMessage!,
-                              style: AppTypography.bodySmall
-                                  .copyWith(color: AppColors.white),
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.white,
+                              ),
                             ),
                           ),
                         ],
@@ -323,8 +354,10 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                       color: AppColors.primary.withValues(alpha: 0.08),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.directions_car,
-                        color: AppColors.primary),
+                    child: const Icon(
+                      Icons.directions_car,
+                      color: AppColors.primary,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.lg),
                   Expanded(
@@ -347,8 +380,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                   ),
                   Text(
                     ride.vehicleRegistration,
-                    style: AppTypography.labelMedium
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AppTypography.labelMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),

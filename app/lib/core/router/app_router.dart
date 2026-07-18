@@ -24,12 +24,12 @@ import '../../features/trip/presentation/screens/trip_finish_screen.dart';
 import '../../features/vehicle/presentation/screens/my_vehicles_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authNotifierProvider);
-
   return GoRouter(
     initialLocation: RouteNames.splash,
     debugLogDiagnostics: true,
     redirect: (context, state) {
+      // Read auth state inside redirect (not watch) to avoid recreating the router
+      final authState = ref.read(authNotifierProvider);
       final isLoggedIn = authState.user != null;
       final isAuthRoute =
           state.matchedLocation == RouteNames.login ||
@@ -90,8 +90,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RouteNames.chat,
-        builder: (context, state) =>
-            ChatScreen(args: state.extra! as ChatArgs),
+        builder: (context, state) => ChatScreen(args: state.extra! as ChatArgs),
       ),
       GoRoute(
         path: RouteNames.wallet,

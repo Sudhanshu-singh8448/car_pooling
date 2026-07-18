@@ -29,14 +29,14 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor:
-                        AppColors.primary.withValues(alpha: 0.1),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     child: Text(
                       (user?.name.isNotEmpty ?? false)
                           ? user!.name[0].toUpperCase()
                           : '?',
-                      style: AppTypography.h3
-                          .copyWith(color: AppColors.primary),
+                      style: AppTypography.h3.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.lg),
@@ -44,21 +44,20 @@ class SettingsScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user?.name ?? 'User',
-                            style: AppTypography.h4),
-                        Text(user?.email ?? '',
-                            style: AppTypography.bodySmall),
+                        Text(user?.name ?? 'User', style: AppTypography.h4),
+                        Text(user?.email ?? '', style: AppTypography.bodySmall),
                         if (user?.isAdmin ?? false)
                           Container(
-                            margin:
-                                const EdgeInsets.only(top: AppSpacing.xs),
+                            margin: const EdgeInsets.only(top: AppSpacing.xs),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.sm, vertical: 2),
+                              horizontal: AppSpacing.sm,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.secondary
-                                  .withValues(alpha: 0.1),
+                              color: AppColors.secondary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusFull),
+                                AppSpacing.radiusFull,
+                              ),
                             ),
                             child: Text(
                               'ADMIN',
@@ -77,55 +76,77 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           _sectionTitle('Account'),
-          _tile(context, Icons.account_balance_wallet_outlined, 'Wallet',
-              () => context.push(RouteNames.wallet)),
-          _tile(context, Icons.directions_car_outlined, 'My Vehicles',
-              () => context.go(RouteNames.myVehicle)),
-          _tile(context, Icons.route_outlined, 'My Trips',
-              () => context.go(RouteNames.myTrips)),
-          _tile(context, Icons.history, 'Ride History',
-              () => context.go(RouteNames.rideHistory)),
+          _tile(
+            context,
+            Icons.account_balance_wallet_outlined,
+            'Wallet',
+            () => context.push(RouteNames.wallet),
+          ),
+          _tile(
+            context,
+            Icons.directions_car_outlined,
+            'My Vehicles',
+            () => context.go(RouteNames.myVehicle),
+          ),
+          _tile(
+            context,
+            Icons.route_outlined,
+            'My Trips',
+            () => context.go(RouteNames.myTrips),
+          ),
+          _tile(
+            context,
+            Icons.history,
+            'Ride History',
+            () => context.go(RouteNames.rideHistory),
+          ),
           const SizedBox(height: AppSpacing.xl),
           _sectionTitle('Insights'),
-          _tile(context, Icons.insert_chart_outlined, 'Reports',
-              () => context.push(RouteNames.reports)),
+          _tile(
+            context,
+            Icons.insert_chart_outlined,
+            'Reports',
+            () => context.push(RouteNames.reports),
+          ),
           if (user?.isAdmin ?? false)
-            _tile(context, Icons.admin_panel_settings_outlined,
-                'Admin Dashboard',
-                () => context.push(RouteNames.adminDashboard)),
+            _tile(
+              context,
+              Icons.admin_panel_settings_outlined,
+              'Admin Dashboard',
+              () => context.push(RouteNames.adminDashboard),
+            ),
           const SizedBox(height: AppSpacing.xl),
           _sectionTitle('Other'),
           _tile(context, Icons.help_outline, 'Help & Support', () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('Contact support@carpooling.demo')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Contact support@carpooling.demo')),
+            );
           }),
-          _tile(
-            context,
-            Icons.logout,
-            'Logout',
-            () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
-                  actions: [
-                    TextButton(
-                        onPressed: () => dialogContext.pop(false),
-                        child: const Text('Cancel')),
-                    TextButton(
-                        onPressed: () => dialogContext.pop(true),
-                        child: const Text('Logout',
-                            style: TextStyle(color: AppColors.error))),
-                  ],
-                ),
-              );
-              if (confirmed ?? false) {
-                await ref.read(authNotifierProvider.notifier).signOut();
-              }
-            },
-            color: AppColors.error,
-          ),
+          _tile(context, Icons.logout, 'Logout', () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Logout'),
+                content: const Text('Are you sure you want to logout?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => dialogContext.pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => dialogContext.pop(true),
+                    child: const Text(
+                      'Logout',
+                      style: TextStyle(color: AppColors.error),
+                    ),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed ?? false) {
+              await ref.read(authNotifierProvider.notifier).signOut();
+            }
+          }, color: AppColors.error),
         ],
       ),
     );
@@ -134,25 +155,40 @@ class SettingsScreen extends ConsumerWidget {
   Widget _sectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(
-          left: AppSpacing.xs, bottom: AppSpacing.sm),
-      child: Text(title,
-          style: AppTypography.labelMedium
-              .copyWith(color: AppColors.textTertiary)),
+        left: AppSpacing.xs,
+        bottom: AppSpacing.sm,
+      ),
+      child: Text(
+        title,
+        style: AppTypography.labelMedium.copyWith(
+          color: AppColors.textTertiary,
+        ),
+      ),
     );
   }
 
-  Widget _tile(BuildContext context, IconData icon, String title,
-      VoidCallback onTap,
-      {Color? color}) {
+  Widget _tile(
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    Color? color,
+  }) {
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: ListTile(
         leading: Icon(icon, color: color ?? AppColors.textSecondary),
-        title: Text(title,
-            style: AppTypography.labelLarge
-                .copyWith(color: color ?? AppColors.textPrimary)),
-        trailing: const Icon(Icons.chevron_right,
-            color: AppColors.textTertiary, size: 20),
+        title: Text(
+          title,
+          style: AppTypography.labelLarge.copyWith(
+            color: color ?? AppColors.textPrimary,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.chevron_right,
+          color: AppColors.textTertiary,
+          size: 20,
+        ),
         onTap: onTap,
       ),
     );

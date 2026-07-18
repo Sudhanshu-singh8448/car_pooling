@@ -39,8 +39,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
       duration: const Duration(milliseconds: 800),
     );
     _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
-    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
   }
 
@@ -60,15 +62,26 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
     ref.read(authNotifierProvider.notifier).clearError();
 
-    final success = await ref.read(authNotifierProvider.notifier).signUp(
+    final outcome = await ref.read(authNotifierProvider.notifier).signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
         );
 
-    if (success && mounted) {
-      context.go(RouteNames.dashboard);
+    if (mounted) {
+      if (outcome == SignUpOutcome.authenticated) {
+        context.go(RouteNames.dashboard);
+      } else if (outcome == SignUpOutcome.needsEmailConfirmation) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Please check your email to confirm your account.'),
+            backgroundColor: AppColors.success,
+            duration: Duration(seconds: 5),
+          ),
+        );
+        context.go(RouteNames.login);
+      }
     }
   }
 
@@ -102,7 +115,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                       // Back button row
                       Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.screenPadding),
+                          horizontal: AppSpacing.screenPadding,
+                        ),
                         child: Row(
                           children: [
                             GestureDetector(
@@ -111,11 +125,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                                 padding: const EdgeInsets.all(AppSpacing.sm),
                                 decoration: BoxDecoration(
                                   color: AppColors.white.withValues(alpha: 0.2),
-                                  borderRadius:
-                                      BorderRadius.circular(AppSpacing.radiusSm),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm,
+                                  ),
                                 ),
-                                child: const Icon(Icons.arrow_back,
-                                    color: AppColors.white, size: 22),
+                                child: const Icon(
+                                  Icons.arrow_back,
+                                  color: AppColors.white,
+                                  size: 22,
+                                ),
                               ),
                             ),
                           ],
@@ -124,7 +142,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                       const SizedBox(height: 16),
                       Text(
                         'Welcome',
-                        style: AppTypography.h2.copyWith(color: AppColors.white),
+                        style: AppTypography.h2.copyWith(
+                          color: AppColors.white,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -152,8 +172,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                       padding: const EdgeInsets.all(AppSpacing.xxl),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusXl),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusXl,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.black.withValues(alpha: 0.08),
@@ -181,22 +202,28 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                                   CircleAvatar(
                                     radius: 40,
                                     backgroundColor: AppColors.surfaceVariant,
-                                    child: const Icon(Icons.person,
-                                        size: 40,
-                                        color: AppColors.textTertiary),
+                                    child: const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: AppColors.textTertiary,
+                                    ),
                                   ),
                                   Positioned(
                                     bottom: 0,
                                     right: 0,
                                     child: Container(
-                                      padding:
-                                          const EdgeInsets.all(AppSpacing.xs),
+                                      padding: const EdgeInsets.all(
+                                        AppSpacing.xs,
+                                      ),
                                       decoration: const BoxDecoration(
                                         color: AppColors.primary,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.camera_alt,
-                                          size: 16, color: AppColors.white),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        size: 16,
+                                        color: AppColors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -204,9 +231,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                             ),
                             const SizedBox(height: 6),
                             Center(
-                              child: Text('Upload',
-                                  style: AppTypography.caption
-                                      .copyWith(color: AppColors.primary)),
+                              child: Text(
+                                'Upload',
+                                style: AppTypography.caption.copyWith(
+                                  color: AppColors.primary,
+                                ),
+                              ),
                             ),
                             const SizedBox(height: AppSpacing.lg),
 
@@ -216,19 +246,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                                 padding: const EdgeInsets.all(AppSpacing.md),
                                 decoration: BoxDecoration(
                                   color: AppColors.error.withValues(alpha: 0.1),
-                                  borderRadius:
-                                      BorderRadius.circular(AppSpacing.radiusSm),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm,
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.error_outline,
-                                        color: AppColors.error, size: 20),
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: AppColors.error,
+                                      size: 20,
+                                    ),
                                     const SizedBox(width: AppSpacing.sm),
                                     Expanded(
                                       child: Text(
                                         authState.errorMessage!,
-                                        style: AppTypography.bodySmall
-                                            .copyWith(color: AppColors.error),
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: AppColors.error,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -256,7 +291,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                               textInputAction: TextInputAction.next,
                               validator: Validators.email,
                               decoration: const InputDecoration(
-                                hintText: 'Email / Mobile',
+                                hintText: 'Email',
                                 prefixIcon: Icon(Icons.email_outlined),
                               ),
                             ),
@@ -285,11 +320,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                                 hintText: 'Password',
                                 prefixIcon: const Icon(Icons.lock_outlined),
                                 suffixIcon: IconButton(
-                                  icon: Icon(_obscurePassword
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined),
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                  ),
                                   onPressed: () => setState(
-                                      () => _obscurePassword = !_obscurePassword),
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
                                 ),
                               ),
                             ),
@@ -301,18 +339,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                               obscureText: _obscureConfirm,
                               textInputAction: TextInputAction.done,
                               validator: (v) => Validators.confirmPassword(
-                                  v, _passwordController.text),
+                                v,
+                                _passwordController.text,
+                              ),
                               onFieldSubmitted: (_) => _handleSignUp(),
                               decoration: InputDecoration(
                                 hintText: 'Confirm Password',
-                                prefixIcon:
-                                    const Icon(Icons.lock_outline_rounded),
+                                prefixIcon: const Icon(
+                                  Icons.lock_outline_rounded,
+                                ),
                                 suffixIcon: IconButton(
-                                  icon: Icon(_obscureConfirm
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined),
+                                  icon: Icon(
+                                    _obscureConfirm
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                  ),
                                   onPressed: () => setState(
-                                      () => _obscureConfirm = !_obscureConfirm),
+                                    () => _obscureConfirm = !_obscureConfirm,
+                                  ),
                                 ),
                               ),
                             ),
@@ -322,8 +366,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                             SizedBox(
                               height: 52,
                               child: ElevatedButton(
-                                onPressed:
-                                    authState.isLoading ? null : _handleSignUp,
+                                onPressed: authState.isLoading
+                                    ? null
+                                    : _handleSignUp,
                                 child: authState.isLoading
                                     ? const SizedBox(
                                         width: 22,

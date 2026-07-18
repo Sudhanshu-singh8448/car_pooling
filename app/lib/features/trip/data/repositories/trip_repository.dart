@@ -43,14 +43,13 @@ class TripRepository {
     required double longitude,
     double? speed,
     double? heading,
-  }) =>
-      _dataSource.publishLocation(
-        rideId: rideId,
-        latitude: latitude,
-        longitude: longitude,
-        speed: speed,
-        heading: heading,
-      );
+  }) => _dataSource.publishLocation(
+    rideId: rideId,
+    latitude: latitude,
+    longitude: longitude,
+    speed: speed,
+    heading: heading,
+  );
 
   Future<Map<String, dynamic>?> getLastLocation(String rideId) =>
       _dataSource.getLastLocation(rideId);
@@ -58,8 +57,7 @@ class TripRepository {
   RealtimeChannel subscribeToLocations(
     String rideId,
     void Function(Map<String, dynamic>) onLocation,
-  ) =>
-      _dataSource.subscribeToLocations(rideId, onLocation);
+  ) => _dataSource.subscribeToLocations(rideId, onLocation);
 
   Future<void> unsubscribe(RealtimeChannel channel) =>
       _dataSource.unsubscribe(channel);

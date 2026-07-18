@@ -60,18 +60,23 @@ class PaymentRemoteDataSource {
     return WalletData(
       balance: (wallet['balance'] as num).toDouble(),
       transactions: (txns as List)
-          .map((t) =>
-              WalletTransaction.fromMap(Map<String, dynamic>.from(t as Map)))
+          .map(
+            (t) =>
+                WalletTransaction.fromMap(Map<String, dynamic>.from(t as Map)),
+          )
           .toList(),
     );
   }
 
   /// Credit the wallet (called after gateway success).
   Future<double> rechargeWallet(double amount, {String? description}) async {
-    final data = await _client.rpc('recharge_wallet', params: {
-      'p_amount': amount,
-      'p_description': description ?? 'Wallet recharge',
-    });
+    final data = await _client.rpc(
+      'recharge_wallet',
+      params: {
+        'p_amount': amount,
+        'p_description': description ?? 'Wallet recharge',
+      },
+    );
     return ((data as Map)['balance'] as num).toDouble();
   }
 
@@ -97,9 +102,9 @@ class PaymentRemoteDataSource {
       'transaction_id': transactionId,
       'paid_at': now,
     });
-    await _client.from('bookings').update({
-      'status': 'payment_completed',
-      'updated_at': now,
-    }).eq('id', bookingId);
+    await _client
+        .from('bookings')
+        .update({'status': 'payment_completed', 'updated_at': now})
+        .eq('id', bookingId);
   }
 }

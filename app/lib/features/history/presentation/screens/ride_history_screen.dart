@@ -32,13 +32,19 @@ class RideHistoryScreen extends ConsumerWidget {
               return ListView(
                 children: [
                   const SizedBox(height: 120),
-                  const Icon(Icons.history,
-                      size: 64, color: AppColors.textTertiary),
+                  const Icon(
+                    Icons.history,
+                    size: 64,
+                    color: AppColors.textTertiary,
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   Center(
-                    child: Text('No past rides yet',
-                        style: AppTypography.h4
-                            .copyWith(color: AppColors.textSecondary)),
+                    child: Text(
+                      'No past rides yet',
+                      style: AppTypography.h4.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Center(

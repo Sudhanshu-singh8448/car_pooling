@@ -55,24 +55,33 @@ class PaymentGatewayService {
 
     void cleanup() => razorpay.clear();
 
-    razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS,
-        (PaymentSuccessResponse response) {
+    razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, (
+      PaymentSuccessResponse response,
+    ) {
       cleanup();
       completer.complete(
-          GatewayResult(success: true, transactionId: response.paymentId));
+        GatewayResult(success: true, transactionId: response.paymentId),
+      );
     });
-    razorpay.on(Razorpay.EVENT_PAYMENT_ERROR,
-        (PaymentFailureResponse response) {
+    razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, (
+      PaymentFailureResponse response,
+    ) {
       cleanup();
-      completer.complete(GatewayResult(
-        success: false,
-        errorMessage: response.message ?? 'Payment failed',
-      ));
+      completer.complete(
+        GatewayResult(
+          success: false,
+          errorMessage: response.message ?? 'Payment failed',
+        ),
+      );
     });
     razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, (_) {
       cleanup();
-      completer.complete(const GatewayResult(
-          success: false, errorMessage: 'External wallet not supported'));
+      completer.complete(
+        const GatewayResult(
+          success: false,
+          errorMessage: 'External wallet not supported',
+        ),
+      );
     });
 
     razorpay.open({
@@ -80,10 +89,7 @@ class PaymentGatewayService {
       'amount': (amount * 100).round(), // paise
       'name': AppConstants.appName,
       'description': description,
-      'prefill': {
-        'email': ?userEmail,
-        'contact': ?userPhone,
-      },
+      'prefill': {'email': ?userEmail, 'contact': ?userPhone},
     });
 
     return completer.future;

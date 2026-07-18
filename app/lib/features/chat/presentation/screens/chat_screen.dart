@@ -100,10 +100,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       _scrollToBottom();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Message failed to send.'),
-          backgroundColor: AppColors.error,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Message failed to send.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -129,83 +131,77 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _messages.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No messages yet.\nSay hello to coordinate your ride!',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.bodyMedium,
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) {
-                          final message = _messages[index];
-                          final isMine = message.senderId == myId;
-                          return Align(
-                            alignment: isMine
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: Container(
-                              margin: const EdgeInsets.only(
-                                  bottom: AppSpacing.sm),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.lg,
-                                vertical: AppSpacing.md,
-                              ),
-                              constraints: BoxConstraints(
-                                maxWidth:
-                                    MediaQuery.of(context).size.width * 0.75,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isMine
-                                    ? AppColors.primary
-                                    : AppColors.surface,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(16),
-                                  topRight: const Radius.circular(16),
-                                  bottomLeft: Radius.circular(isMine ? 16 : 4),
-                                  bottomRight:
-                                      Radius.circular(isMine ? 4 : 16),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.black
-                                        .withValues(alpha: 0.04),
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    message.content,
-                                    style: AppTypography.bodyMedium.copyWith(
-                                      color: isMine
-                                          ? AppColors.white
-                                          : AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    DateFormat('h:mm a')
-                                        .format(message.sentAt),
-                                    style: AppTypography.caption.copyWith(
-                                      fontSize: 10,
-                                      color: isMine
-                                          ? AppColors.white
-                                              .withValues(alpha: 0.7)
-                                          : AppColors.textTertiary,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                ? Center(
+                    child: Text(
+                      'No messages yet.\nSay hello to coordinate your ride!',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodyMedium,
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      final isMine = message.senderId == myId;
+                      return Align(
+                        alignment: isMine
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: AppSpacing.md,
+                          ),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.75,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isMine
+                                ? AppColors.primary
+                                : AppColors.surface,
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(16),
+                              topRight: const Radius.circular(16),
+                              bottomLeft: Radius.circular(isMine ? 16 : 4),
+                              bottomRight: Radius.circular(isMine ? 4 : 16),
                             ),
-                          );
-                        },
-                      ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.black.withValues(alpha: 0.04),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                message.content,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: isMine
+                                      ? AppColors.white
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                DateFormat('h:mm a').format(message.sentAt),
+                                style: AppTypography.caption.copyWith(
+                                  fontSize: 10,
+                                  color: isMine
+                                      ? AppColors.white.withValues(alpha: 0.7)
+                                      : AppColors.textTertiary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -245,10 +241,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: AppColors.white),
+                              strokeWidth: 2,
+                              color: AppColors.white,
+                            ),
                           )
-                        : const Icon(Icons.send_rounded,
-                            color: AppColors.white, size: 20),
+                        : const Icon(
+                            Icons.send_rounded,
+                            color: AppColors.white,
+                            size: 20,
+                          ),
                   ),
                 ],
               ),

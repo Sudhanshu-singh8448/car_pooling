@@ -23,14 +23,14 @@ class AdminEmployee {
   });
 
   factory AdminEmployee.fromMap(Map<String, dynamic> map) => AdminEmployee(
-        id: map['id'] as String,
-        name: map['name'] as String? ?? '—',
-        email: map['email'] as String? ?? '—',
-        phone: map['phone'] as String?,
-        department: map['department'] as String?,
-        role: map['role'] as String? ?? 'employee',
-        platformAccess: map['platform_access'] as String? ?? 'granted',
-      );
+    id: map['id'] as String,
+    name: map['name'] as String? ?? '—',
+    email: map['email'] as String? ?? '—',
+    phone: map['phone'] as String?,
+    department: map['department'] as String?,
+    role: map['role'] as String? ?? 'employee',
+    platformAccess: map['platform_access'] as String? ?? 'granted',
+  );
 }
 
 class AdminVehicle {
@@ -51,14 +51,13 @@ class AdminVehicle {
   });
 
   factory AdminVehicle.fromMap(Map<String, dynamic> map) => AdminVehicle(
-        id: map['id'] as String,
-        model: map['model'] as String,
-        registrationNumber: map['registration_number'] as String,
-        seatingCapacity: (map['seating_capacity'] as num).toInt(),
-        status: map['status'] as String,
-        ownerName:
-            (map['profiles'] as Map?)?['name'] as String? ?? '—',
-      );
+    id: map['id'] as String,
+    model: map['model'] as String,
+    registrationNumber: map['registration_number'] as String,
+    seatingCapacity: (map['seating_capacity'] as num).toInt(),
+    status: map['status'] as String,
+    ownerName: (map['profiles'] as Map?)?['name'] as String? ?? '—',
+  );
 }
 
 class OrgSettings {
@@ -81,16 +80,14 @@ class OrgSettings {
   });
 
   factory OrgSettings.fromMap(Map<String, dynamic> map) => OrgSettings(
-        id: map['id'] as String,
-        name: map['name'] as String,
-        industry: map['industry'] as String?,
-        address: map['address'] as String?,
-        fuelCostPerLiter:
-            ((map['fuel_cost_per_liter'] as num?) ?? 100).toDouble(),
-        costPerKm: ((map['cost_per_km'] as num?) ?? 12).toDouble(),
-        travelCostPerKm:
-            ((map['travel_cost_per_km'] as num?) ?? 15).toDouble(),
-      );
+    id: map['id'] as String,
+    name: map['name'] as String,
+    industry: map['industry'] as String?,
+    address: map['address'] as String?,
+    fuelCostPerLiter: ((map['fuel_cost_per_liter'] as num?) ?? 100).toDouble(),
+    costPerKm: ((map['cost_per_km'] as num?) ?? 12).toDouble(),
+    travelCostPerKm: ((map['travel_cost_per_km'] as num?) ?? 15).toDouble(),
+  );
 }
 
 class AdminStats {
@@ -105,8 +102,9 @@ class AdminStats {
   });
 }
 
-final adminEmployeesProvider =
-    FutureProvider.autoDispose<List<AdminEmployee>>((ref) async {
+final adminEmployeesProvider = FutureProvider.autoDispose<List<AdminEmployee>>((
+  ref,
+) async {
   final client = ref.read(supabaseClientProvider);
   final data = await client.from('profiles').select().order('name');
   return (data as List)
@@ -114,8 +112,9 @@ final adminEmployeesProvider =
       .toList();
 });
 
-final adminVehiclesProvider =
-    FutureProvider.autoDispose<List<AdminVehicle>>((ref) async {
+final adminVehiclesProvider = FutureProvider.autoDispose<List<AdminVehicle>>((
+  ref,
+) async {
   final client = ref.read(supabaseClientProvider);
   final data = await client
       .from('vehicles')
@@ -127,17 +126,21 @@ final adminVehiclesProvider =
       .toList();
 });
 
-final adminStatsProvider =
-    FutureProvider.autoDispose<AdminStats>((ref) async {
+final adminStatsProvider = FutureProvider.autoDispose<AdminStats>((ref) async {
   final client = ref.read(supabaseClientProvider);
-  final monthStart = DateTime(DateTime.now().year, DateTime.now().month)
-      .toUtc()
-      .toIso8601String();
+  final monthStart = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+  ).toUtc().toIso8601String();
   final employees = await client.from('profiles').count();
-  final vehicles =
-      await client.from('vehicles').count().eq('is_deleted', false);
-  final rides =
-      await client.from('rides').count().gte('created_at', monthStart);
+  final vehicles = await client
+      .from('vehicles')
+      .count()
+      .eq('is_deleted', false);
+  final rides = await client
+      .from('rides')
+      .count()
+      .gte('created_at', monthStart);
   return AdminStats(
     totalEmployees: employees,
     totalVehicles: vehicles,
@@ -145,8 +148,9 @@ final adminStatsProvider =
   );
 });
 
-final orgSettingsProvider =
-    FutureProvider.autoDispose<OrgSettings?>((ref) async {
+final orgSettingsProvider = FutureProvider.autoDispose<OrgSettings?>((
+  ref,
+) async {
   final client = ref.read(supabaseClientProvider);
   final data = await client
       .from('organizations')
@@ -167,13 +171,16 @@ class AdminActionNotifier extends StateNotifier<bool> {
   SupabaseClient get _client => _ref.read(supabaseClientProvider);
 
   Future<String?> toggleEmployeeAccess(
-      String profileId, String currentAccess) async {
+    String profileId,
+    String currentAccess,
+  ) async {
     state = true;
     try {
       final next = currentAccess == 'granted' ? 'revoked' : 'granted';
       await _client
           .from('profiles')
-          .update({'platform_access': next}).eq('id', profileId);
+          .update({'platform_access': next})
+          .eq('id', profileId);
       _ref.invalidate(adminEmployeesProvider);
       return null;
     } catch (_) {
@@ -184,13 +191,16 @@ class AdminActionNotifier extends StateNotifier<bool> {
   }
 
   Future<String?> toggleVehicleStatus(
-      String vehicleId, String currentStatus) async {
+    String vehicleId,
+    String currentStatus,
+  ) async {
     state = true;
     try {
       final next = currentStatus == 'active' ? 'inactive' : 'active';
       await _client
           .from('vehicles')
-          .update({'status': next}).eq('id', vehicleId);
+          .update({'status': next})
+          .eq('id', vehicleId);
       _ref.invalidate(adminVehiclesProvider);
       return null;
     } catch (_) {
@@ -230,7 +240,8 @@ class AdminActionNotifier extends StateNotifier<bool> {
   }
 }
 
-final adminActionProvider =
-    StateNotifierProvider<AdminActionNotifier, bool>((ref) {
+final adminActionProvider = StateNotifierProvider<AdminActionNotifier, bool>((
+  ref,
+) {
   return AdminActionNotifier(ref);
 });

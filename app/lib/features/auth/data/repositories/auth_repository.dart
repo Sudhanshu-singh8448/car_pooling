@@ -6,7 +6,7 @@ class AuthRepository {
 
   AuthRepository(this._remoteDataSource);
 
-  Future<UserEntity> signUp({
+  Future<SignUpResult> signUp({
     required String email,
     required String password,
     required String name,
@@ -20,10 +20,7 @@ class AuthRepository {
     );
   }
 
-  Future<UserEntity> signIn({
-    required String email,
-    required String password,
-  }) {
+  Future<UserEntity> signIn({required String email, required String password}) {
     return _remoteDataSource.signIn(email: email, password: password);
   }
 

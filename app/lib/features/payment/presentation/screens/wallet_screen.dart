@@ -59,14 +59,14 @@ class WalletScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Available Balance',
-                      style: AppTypography.labelMedium
-                          .copyWith(color: AppColors.white.withValues(alpha: 0.8)),
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.white.withValues(alpha: 0.8),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       '₹ ${wallet.balance.toStringAsFixed(2)}',
-                      style:
-                          AppTypography.h1.copyWith(color: AppColors.white),
+                      style: AppTypography.h1.copyWith(color: AppColors.white),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     ElevatedButton.icon(
@@ -86,15 +86,22 @@ class WalletScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.md),
               if (wallet.transactions.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.huge),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.huge,
+                  ),
                   child: Center(
                     child: Column(
                       children: [
-                        const Icon(Icons.receipt_long_outlined,
-                            size: 48, color: AppColors.textTertiary),
+                        const Icon(
+                          Icons.receipt_long_outlined,
+                          size: 48,
+                          color: AppColors.textTertiary,
+                        ),
                         const SizedBox(height: AppSpacing.md),
-                        Text('No transactions yet',
-                            style: AppTypography.bodyMedium),
+                        Text(
+                          'No transactions yet',
+                          style: AppTypography.bodyMedium,
+                        ),
                       ],
                     ),
                   ),
@@ -176,10 +183,12 @@ class _RechargeSheetState extends ConsumerState<_RechargeSheet> {
   Future<void> _recharge() async {
     final amount = double.tryParse(_amountController.text.trim()) ?? 0;
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Enter a valid amount.'),
-        backgroundColor: AppColors.error,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a valid amount.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
       return;
     }
     final error = await ref
@@ -187,24 +196,26 @@ class _RechargeSheetState extends ConsumerState<_RechargeSheet> {
         .rechargeWallet(amount: amount, method: _method);
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(error),
-        backgroundColor: AppColors.error,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: AppColors.error),
+      );
       return;
     }
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('₹ ${amount.toStringAsFixed(0)} added to wallet!'),
-      backgroundColor: AppColors.success,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('₹ ${amount.toStringAsFixed(0)} added to wallet!'),
+        backgroundColor: AppColors.success,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isBusy = ref.watch(paymentNotifierProvider);
-    final gatewayNote =
-        kIsWeb ? 'via Razorpay (Test Mode — simulated)' : 'via Razorpay (Test Mode)';
+    final gatewayNote = kIsWeb
+        ? 'via Razorpay (Test Mode — simulated)'
+        : 'via Razorpay (Test Mode)';
 
     return Padding(
       padding: EdgeInsets.only(
@@ -234,24 +245,28 @@ class _RechargeSheetState extends ConsumerState<_RechargeSheet> {
           Wrap(
             spacing: AppSpacing.sm,
             children: _presets
-                .map((p) => ActionChip(
-                      label: Text('₹ ${p.toStringAsFixed(0)}'),
-                      onPressed: () =>
-                          _amountController.text = p.toStringAsFixed(0),
-                    ))
+                .map(
+                  (p) => ActionChip(
+                    label: Text('₹ ${p.toStringAsFixed(0)}'),
+                    onPressed: () =>
+                        _amountController.text = p.toStringAsFixed(0),
+                  ),
+                )
                 .toList(),
           ),
           const SizedBox(height: AppSpacing.lg),
           SegmentedButton<String>(
             segments: const [
               ButtonSegment(
-                  value: 'upi',
-                  label: Text('UPI'),
-                  icon: Icon(Icons.qr_code_2)),
+                value: 'upi',
+                label: Text('UPI'),
+                icon: Icon(Icons.qr_code_2),
+              ),
               ButtonSegment(
-                  value: 'card',
-                  label: Text('Card'),
-                  icon: Icon(Icons.credit_card)),
+                value: 'card',
+                label: Text('Card'),
+                icon: Icon(Icons.credit_card),
+              ),
             ],
             selected: {_method},
             onSelectionChanged: (s) => setState(() => _method = s.first),
@@ -266,7 +281,9 @@ class _RechargeSheetState extends ConsumerState<_RechargeSheet> {
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppColors.white),
+                        strokeWidth: 2,
+                        color: AppColors.white,
+                      ),
                     )
                   : const Text('Proceed to Recharge'),
             ),

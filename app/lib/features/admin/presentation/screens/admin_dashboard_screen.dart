@@ -53,8 +53,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
           tabs: const [
             Tab(text: 'Employees', icon: Icon(Icons.people_outline, size: 18)),
             Tab(
-                text: 'Vehicles',
-                icon: Icon(Icons.directions_car_outlined, size: 18)),
+              text: 'Vehicles',
+              icon: Icon(Icons.directions_car_outlined, size: 18),
+            ),
             Tab(text: 'Settings', icon: Icon(Icons.tune, size: 18)),
           ],
         ),
@@ -71,14 +72,26 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                   error: (_, _) => const SizedBox.shrink(),
                   data: (s) => Row(
                     children: [
-                      _statCard('Total Employees', '${s.totalEmployees}',
-                          Icons.people_outline, AppColors.primary),
+                      _statCard(
+                        'Total Employees',
+                        '${s.totalEmployees}',
+                        Icons.people_outline,
+                        AppColors.primary,
+                      ),
                       const SizedBox(width: AppSpacing.lg),
-                      _statCard('Registered Vehicles', '${s.totalVehicles}',
-                          Icons.directions_car_outlined, AppColors.secondary),
+                      _statCard(
+                        'Registered Vehicles',
+                        '${s.totalVehicles}',
+                        Icons.directions_car_outlined,
+                        AppColors.secondary,
+                      ),
                       const SizedBox(width: AppSpacing.lg),
-                      _statCard('Rides This Month', '${s.ridesThisMonth}',
-                          Icons.route_outlined, AppColors.success),
+                      _statCard(
+                        'Rides This Month',
+                        '${s.ridesThisMonth}',
+                        Icons.route_outlined,
+                        AppColors.success,
+                      ),
                     ],
                   ),
                 ),
@@ -121,10 +134,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(value, style: AppTypography.h2),
-                    Text(label,
-                        style: AppTypography.caption,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      label,
+                      style: AppTypography.caption,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
@@ -154,8 +169,9 @@ class _EmployeesTab extends ConsumerWidget {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingTextStyle: AppTypography.labelMedium
-                    .copyWith(color: AppColors.textSecondary),
+                headingTextStyle: AppTypography.labelMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 columns: const [
                   DataColumn(label: Text('NAME')),
                   DataColumn(label: Text('EMAIL')),
@@ -165,43 +181,60 @@ class _EmployeesTab extends ConsumerWidget {
                 ],
                 rows: employees.map((e) {
                   final granted = e.platformAccess == 'granted';
-                  return DataRow(cells: [
-                    DataCell(Text(e.name, style: AppTypography.labelLarge)),
-                    DataCell(Text(e.email, style: AppTypography.bodySmall)),
-                    DataCell(Text(e.department ?? '—',
-                        style: AppTypography.bodySmall)),
-                    DataCell(_chip(
-                      e.role.toUpperCase(),
-                      e.role == 'admin'
-                          ? AppColors.secondary
-                          : AppColors.textSecondary,
-                    )),
-                    DataCell(Row(
-                      children: [
-                        Switch(
-                          value: granted,
-                          activeThumbColor: AppColors.success,
-                          onChanged: (_) async {
-                            final error = await ref
-                                .read(adminActionProvider.notifier)
-                                .toggleEmployeeAccess(
-                                    e.id, e.platformAccess);
-                            if (error != null && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(error),
-                                      backgroundColor: AppColors.error));
-                            }
-                          },
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(e.name, style: AppTypography.labelLarge)),
+                      DataCell(Text(e.email, style: AppTypography.bodySmall)),
+                      DataCell(
+                        Text(
+                          e.department ?? '—',
+                          style: AppTypography.bodySmall,
                         ),
-                        Text(granted ? 'Granted' : 'Revoked',
-                            style: AppTypography.caption.copyWith(
+                      ),
+                      DataCell(
+                        _chip(
+                          e.role.toUpperCase(),
+                          e.role == 'admin'
+                              ? AppColors.secondary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                      DataCell(
+                        Row(
+                          children: [
+                            Switch(
+                              value: granted,
+                              activeThumbColor: AppColors.success,
+                              onChanged: (_) async {
+                                final error = await ref
+                                    .read(adminActionProvider.notifier)
+                                    .toggleEmployeeAccess(
+                                      e.id,
+                                      e.platformAccess,
+                                    );
+                                if (error != null && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(error),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                            Text(
+                              granted ? 'Granted' : 'Revoked',
+                              style: AppTypography.caption.copyWith(
                                 color: granted
                                     ? AppColors.success
-                                    : AppColors.error)),
-                      ],
-                    )),
-                  ]);
+                                    : AppColors.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
                 }).toList(),
               ),
             ),
@@ -214,14 +247,20 @@ class _EmployeesTab extends ConsumerWidget {
   Widget _chip(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm, vertical: 2),
+        horizontal: AppSpacing.sm,
+        vertical: 2,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       ),
-      child: Text(label,
-          style: AppTypography.caption
-              .copyWith(color: color, fontWeight: FontWeight.w700)),
+      child: Text(
+        label,
+        style: AppTypography.caption.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }
@@ -244,8 +283,9 @@ class _VehiclesTab extends ConsumerWidget {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingTextStyle: AppTypography.labelMedium
-                    .copyWith(color: AppColors.textSecondary),
+                headingTextStyle: AppTypography.labelMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 columns: const [
                   DataColumn(label: Text('MODEL')),
                   DataColumn(label: Text('REGISTRATION')),
@@ -255,39 +295,57 @@ class _VehiclesTab extends ConsumerWidget {
                 ],
                 rows: vehicles.map((v) {
                   final active = v.status == 'active';
-                  return DataRow(cells: [
-                    DataCell(Text(v.model, style: AppTypography.labelLarge)),
-                    DataCell(Text(v.registrationNumber,
-                        style: AppTypography.bodySmall)),
-                    DataCell(
-                        Text(v.ownerName, style: AppTypography.bodySmall)),
-                    DataCell(Text('${v.seatingCapacity}',
-                        style: AppTypography.bodySmall)),
-                    DataCell(Row(
-                      children: [
-                        Switch(
-                          value: active,
-                          activeThumbColor: AppColors.success,
-                          onChanged: (_) async {
-                            final error = await ref
-                                .read(adminActionProvider.notifier)
-                                .toggleVehicleStatus(v.id, v.status);
-                            if (error != null && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(error),
-                                      backgroundColor: AppColors.error));
-                            }
-                          },
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(v.model, style: AppTypography.labelLarge)),
+                      DataCell(
+                        Text(
+                          v.registrationNumber,
+                          style: AppTypography.bodySmall,
                         ),
-                        Text(active ? 'Active' : 'Inactive',
-                            style: AppTypography.caption.copyWith(
+                      ),
+                      DataCell(
+                        Text(v.ownerName, style: AppTypography.bodySmall),
+                      ),
+                      DataCell(
+                        Text(
+                          '${v.seatingCapacity}',
+                          style: AppTypography.bodySmall,
+                        ),
+                      ),
+                      DataCell(
+                        Row(
+                          children: [
+                            Switch(
+                              value: active,
+                              activeThumbColor: AppColors.success,
+                              onChanged: (_) async {
+                                final error = await ref
+                                    .read(adminActionProvider.notifier)
+                                    .toggleVehicleStatus(v.id, v.status);
+                                if (error != null && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(error),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                            Text(
+                              active ? 'Active' : 'Inactive',
+                              style: AppTypography.caption.copyWith(
                                 color: active
                                     ? AppColors.success
-                                    : AppColors.error)),
-                      ],
-                    )),
-                  ]);
+                                    : AppColors.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
                 }).toList(),
               ),
             ),
@@ -336,31 +394,31 @@ class _OrgSettingsTabState extends ConsumerState<_OrgSettingsTab> {
     _addressController.text = org?.address ?? '';
     _fuelController.text = (org?.fuelCostPerLiter ?? 100).toStringAsFixed(1);
     _costKmController.text = (org?.costPerKm ?? 12).toStringAsFixed(1);
-    _travelKmController.text =
-        (org?.travelCostPerKm ?? 15).toStringAsFixed(1);
+    _travelKmController.text = (org?.travelCostPerKm ?? 15).toStringAsFixed(1);
   }
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    final error =
-        await ref.read(adminActionProvider.notifier).saveOrgSettings(
-              OrgSettings(
-                id: _orgId,
-                name: _nameController.text.trim(),
-                industry: _industryController.text.trim(),
-                address: _addressController.text.trim(),
-                fuelCostPerLiter:
-                    double.tryParse(_fuelController.text) ?? 100,
-                costPerKm: double.tryParse(_costKmController.text) ?? 12,
-                travelCostPerKm:
-                    double.tryParse(_travelKmController.text) ?? 15,
-              ),
-            );
+    final error = await ref
+        .read(adminActionProvider.notifier)
+        .saveOrgSettings(
+          OrgSettings(
+            id: _orgId,
+            name: _nameController.text.trim(),
+            industry: _industryController.text.trim(),
+            address: _addressController.text.trim(),
+            fuelCostPerLiter: double.tryParse(_fuelController.text) ?? 100,
+            costPerKm: double.tryParse(_costKmController.text) ?? 12,
+            travelCostPerKm: double.tryParse(_travelKmController.text) ?? 15,
+          ),
+        );
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(error ?? 'Organization settings saved.'),
-      backgroundColor: error == null ? AppColors.success : AppColors.error,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'Organization settings saved.'),
+        backgroundColor: error == null ? AppColors.success : AppColors.error,
+      ),
+    );
   }
 
   @override
@@ -391,19 +449,19 @@ class _OrgSettingsTabState extends ConsumerState<_OrgSettingsTab> {
                           child: TextFormField(
                             controller: _nameController,
                             decoration: const InputDecoration(
-                                labelText: 'Organization Name'),
+                              labelText: 'Organization Name',
+                            ),
                             validator: (v) =>
-                                (v?.trim().isEmpty ?? true)
-                                    ? 'Required'
-                                    : null,
+                                (v?.trim().isEmpty ?? true) ? 'Required' : null,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.lg),
                         Expanded(
                           child: TextFormField(
                             controller: _industryController,
-                            decoration:
-                                const InputDecoration(labelText: 'Industry'),
+                            decoration: const InputDecoration(
+                              labelText: 'Industry',
+                            ),
                           ),
                         ),
                       ],
@@ -411,8 +469,7 @@ class _OrgSettingsTabState extends ConsumerState<_OrgSettingsTab> {
                     const SizedBox(height: AppSpacing.lg),
                     TextFormField(
                       controller: _addressController,
-                      decoration:
-                          const InputDecoration(labelText: 'Address'),
+                      decoration: const InputDecoration(labelText: 'Address'),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     Row(
@@ -422,7 +479,8 @@ class _OrgSettingsTabState extends ConsumerState<_OrgSettingsTab> {
                             controller: _fuelController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                                labelText: 'Fuel Cost / Liter (₹)'),
+                              labelText: 'Fuel Cost / Liter (₹)',
+                            ),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.lg),
@@ -431,7 +489,8 @@ class _OrgSettingsTabState extends ConsumerState<_OrgSettingsTab> {
                             controller: _costKmController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                                labelText: 'Cost / km (₹)'),
+                              labelText: 'Cost / km (₹)',
+                            ),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.lg),
@@ -440,7 +499,8 @@ class _OrgSettingsTabState extends ConsumerState<_OrgSettingsTab> {
                             controller: _travelKmController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                                labelText: 'Travel Cost / km (₹)'),
+                              labelText: 'Travel Cost / km (₹)',
+                            ),
                           ),
                         ),
                       ],
