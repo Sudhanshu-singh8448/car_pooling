@@ -1,26 +1,40 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+/// Global app configuration.
+///
+/// All secrets (Supabase / Google Maps / Razorpay keys) are loaded from the
+/// bundled `.env` file at startup via `flutter_dotenv`. The `.env` file is
+/// git-ignored — commit only `.env.example` as a template.
+///
+/// Call `await dotenv.load(fileName: '.env')` in `main()` before touching
+/// any of the getters below.
 class AppConstants {
   AppConstants._();
 
   static const String appName = 'Carpooling';
   static const String appTagline = 'Ride Together, Save Together';
 
-  // Supabase — Replace with your actual project credentials
-  static const String supabaseUrl = 'https://tdjzkhxkswmlzuddnfyg.supabase.co';
-  static const String supabaseAnonKey = 'sb_publishable_sA3sav9loZCIbXqSX06ihw_g7uKeJKe';
+  // ── Secrets (read from .env) ──────────────────────────────────────────────
+  static String get supabaseUrl => _required('SUPABASE_URL');
+  static String get supabaseAnonKey => _required('SUPABASE_ANON_KEY');
+  static String get googleMapsApiKey => _required('GOOGLE_MAPS_API_KEY');
+  static String get razorpayKeyId => _required('RAZORPAY_KEY_ID');
 
-  // Google Maps
-  static const String googleMapsApiKey = 'AIzaSyC1WDCqQftqX-evaijqfzvxSZ3IysF6YwQ';
+  static String _required(String key) {
+    final value = dotenv.env[key];
+    if (value == null || value.isEmpty) {
+      throw StateError(
+        'Missing "$key" in .env. Copy .env.example to .env and fill in real '
+        'values, then hot-restart the app.',
+      );
+    }
+    return value;
+  }
 
-  // Razorpay
-  static const String razorpayKeyId = 'rzp_test_TEsRr5uQ0GpI6B';
-
-  //PD7QhjuJvBju345Fb1LV4eEM razorpay_secret
-
-  // Durations
+  // ── Non-secret constants ──────────────────────────────────────────────────
   static const Duration splashDuration = Duration(seconds: 3);
   static const Duration animationDuration = Duration(milliseconds: 300);
   static const Duration snackBarDuration = Duration(seconds: 3);
 
-  // Pagination
   static const int pageSize = 20;
 }

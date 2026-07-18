@@ -46,13 +46,13 @@ class AvailableRidesScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.screenPadding),
               itemCount: rides.length,
               itemBuilder: (context, index) {
-                final ride = rides[index];
+                final match = rides[index];
                 return RideCard(
-                  ride: ride,
+                  match: match,
                   isBooking:
                       bookingState.isLoading &&
-                      bookingState.bookingRideId == ride.id,
-                  onBook: () => _bookRide(context, ref, ride.id, seats),
+                      bookingState.bookingRideId == match.ride.id,
+                  onBook: () => _bookRide(context, ref, match.ride.id, seats),
                 );
               },
             ),

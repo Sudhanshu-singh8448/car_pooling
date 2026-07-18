@@ -1,12 +1,12 @@
 {
-    "name": "car_pooling",
-    "short_name": "car_pooling",
+    "name": "Carpooling — Ride Together, Save Together",
+    "short_name": "Carpooling",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#1976D2",
+    "theme_color": "#1976D2",
+    "description": "Enterprise Carpooling Platform — find, share and manage rides with your organisation.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

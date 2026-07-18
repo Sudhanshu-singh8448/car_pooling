@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ── Secrets (never commit) ───────────────────────────────────────────────
+# API keys and credentials live here — commit only *.example versions.
+.env
+.env.*
+!.env.example
+web/env.js
+android/key.properties
+**/*.keystore
+**/*.jks

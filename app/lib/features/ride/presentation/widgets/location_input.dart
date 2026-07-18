@@ -1,7 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart' as geo;
+import 'package:geolocator/geolocator.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -91,6 +94,7 @@ class _PlaceSearchSheetState extends ConsumerState<_PlaceSearchSheet> {
   List<PlaceSuggestion> _suggestions = [];
   bool _isLoading = false;
   bool _isResolving = false;
+  bool _isLocating = false;
   String? _error;
 
   @override
@@ -115,14 +119,20 @@ class _PlaceSearchSheetState extends ConsumerState<_PlaceSearchSheet> {
       try {
         final results = await ref.read(mapsServiceProvider).autocomplete(query);
         if (mounted) setState(() => _suggestions = results);
-      } catch (_) {
+      } catch (e) {
         if (mounted) {
-          setState(() => _error = 'Search failed. Check your connection.');
+          setState(() => _error = _friendlyError(e));
         }
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
     });
+  }
+
+  String _friendlyError(Object e) {
+    final msg = e.toString().replaceFirst('Exception: ', '');
+    // Keep it under two lines in the UI.
+    return msg.length > 220 ? '${msg.substring(0, 220)}…' : msg;
   }
 
   Future<void> _selectSuggestion(PlaceSuggestion suggestion) async {
@@ -132,11 +142,106 @@ class _PlaceSearchSheetState extends ConsumerState<_PlaceSearchSheet> {
           .read(mapsServiceProvider)
           .getPlaceLocation(suggestion);
       if (mounted) Navigator.pop(context, point);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _isResolving = false;
-          _error = 'Could not get location details. Try again.';
+          _error = _friendlyError(e);
+        });
+      }
+    }
+  }
+
+  /// Uses the device GPS to pick the user's current location, then reverse
+  /// geocodes it into a readable address (mobile only; web falls back to a
+  /// "Current location" label with the coordinates).
+  Future<void> _useCurrentLocation() async {
+    setState(() {
+      _isLocating = true;
+      _error = null;
+    });
+    try {
+      // 1. Location services enabled?
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception(
+          'Location services are turned off. Enable GPS and try again.',
+        );
+      }
+
+      // 2. Permission granted?
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied) {
+        throw Exception('Location permission was denied.');
+      }
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception(
+          'Location permission is permanently denied. Enable it in Settings.',
+        );
+      }
+
+      // 3. Fetch a fix (with a timeout so the UI can't hang).
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      ).timeout(const Duration(seconds: 15));
+
+      // 4. Reverse geocode to a human-readable address (mobile only).
+      String address = 'Current location';
+      if (!kIsWeb) {
+        try {
+          final placemarks = await geo.placemarkFromCoordinates(
+            position.latitude,
+            position.longitude,
+          );
+          if (placemarks.isNotEmpty) {
+            final p = placemarks.first;
+            final parts = <String>[
+              if ((p.name ?? '').isNotEmpty && p.name != p.locality) p.name!,
+              if ((p.subLocality ?? '').isNotEmpty) p.subLocality!,
+              if ((p.locality ?? '').isNotEmpty) p.locality!,
+              if ((p.administrativeArea ?? '').isNotEmpty)
+                p.administrativeArea!,
+            ];
+            if (parts.isNotEmpty) address = parts.join(', ');
+          }
+        } catch (_) {
+          // Reverse geocoding failed — keep generic label + coords below.
+        }
+      }
+      if (address == 'Current location') {
+        address =
+            'Current location '
+            '(${position.latitude.toStringAsFixed(4)}, '
+            '${position.longitude.toStringAsFixed(4)})';
+      }
+
+      if (mounted) {
+        Navigator.pop(
+          context,
+          LocationPoint(
+            address: address,
+            lat: position.latitude,
+            lng: position.longitude,
+          ),
+        );
+      }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() {
+          _error = 'Could not get a GPS fix in time. Try again outdoors.';
+          _isLocating = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = _friendlyError(e);
+          _isLocating = false;
         });
       }
     }
@@ -212,10 +317,40 @@ class _PlaceSearchSheetState extends ConsumerState<_PlaceSearchSheet> {
             else
               Expanded(
                 child: ListView.separated(
-                  itemCount: _suggestions.length,
+                  itemCount: _suggestions.length + 1,
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
-                    final s = _suggestions[index];
+                    if (index == 0) {
+                      return ListTile(
+                        leading: _isLocating
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.my_location_rounded,
+                                color: AppColors.primary,
+                              ),
+                        title: Text(
+                          'Use my current location',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          _isLocating
+                              ? 'Fetching GPS…'
+                              : 'Pick the spot you\'re standing at',
+                          style: AppTypography.bodySmall,
+                        ),
+                        onTap: _isLocating ? null : _useCurrentLocation,
+                      );
+                    }
+                    final s = _suggestions[index - 1];
                     return ListTile(
                       leading: const Icon(
                         Icons.location_on_outlined,

@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../ride/domain/entities/booking_entity.dart';
 import '../../../ride/domain/entities/ride_entity.dart';
+import '../../domain/entities/lifecycle_entity.dart';
 import '../../domain/entities/trip_entity.dart';
 
 const _rideSelect =
@@ -17,8 +18,8 @@ class TripRemoteDataSource {
   /// Active trips where the user is a passenger.
   Future<List<TripEntity>> getPassengerTrips({required bool active}) async {
     final statuses = active
-        ? ['booked', 'in_progress', 'completed', 'payment_pending']
-        : ['payment_completed', 'cancelled'];
+        ? ['pending', 'accepted', 'booked', 'in_progress', 'completed', 'payment_pending']
+        : ['payment_completed', 'cancelled', 'rejected'];
     final data = await _client
         .from('bookings')
         .select('*, rides($_rideSelect)')
@@ -78,7 +79,7 @@ class TripRemoteDataSource {
         .from('bookings')
         .update({'status': 'in_progress', 'started_at': now, 'updated_at': now})
         .eq('ride_id', rideId)
-        .eq('status', 'booked');
+        .inFilter('status', ['booked', 'accepted']);
   }
 
   /// Driver completes the trip: ride → completed, bookings → completed
@@ -93,7 +94,7 @@ class TripRemoteDataSource {
         .from('bookings')
         .update({'status': 'completed', 'completed_at': now, 'updated_at': now})
         .eq('ride_id', rideId)
-        .inFilter('status', ['booked', 'in_progress']);
+        .inFilter('status', ['booked', 'accepted', 'in_progress']);
   }
 
   /// Driver cancels the ride; all active bookings are cancelled too.
@@ -112,7 +113,7 @@ class TripRemoteDataSource {
           'updated_at': now,
         })
         .eq('ride_id', rideId)
-        .inFilter('status', ['booked', 'in_progress']);
+        .inFilter('status', ['pending', 'accepted', 'booked', 'in_progress']);
   }
 
   /// Passenger cancels their booking (seats restored via RPC).
@@ -178,4 +179,66 @@ class TripRemoteDataSource {
 
   Future<void> unsubscribe(RealtimeChannel channel) =>
       _client.removeChannel(channel);
+
+  // ---------- Lifecycle timeline ----------
+
+  /// Fetch lifecycle events for a ride (timeline).
+  Future<List<LifecycleEvent>> getLifecycleEvents(String rideId) async {
+    final data = await _client
+        .from('trip_lifecycle')
+        .select()
+        .eq('ride_id', rideId)
+        .order('created_at', ascending: true);
+    return (data as List)
+        .map((e) =>
+            LifecycleEvent.fromMap(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  // ---------- Booking accept / reject (driver) ----------
+
+  /// Driver accepts a pending booking request.
+  Future<void> acceptBooking(String bookingId) async {
+    await _client.rpc(
+      'accept_booking',
+      params: {'p_booking_id': bookingId},
+    );
+  }
+
+  /// Driver rejects a pending booking request.
+  Future<void> rejectBooking(String bookingId) async {
+    await _client.rpc(
+      'reject_booking',
+      params: {'p_booking_id': bookingId},
+    );
+  }
+
+  // ---------- Half ride / early exit ----------
+
+  /// Passenger requests to end the ride early.
+  Future<void> requestEarlyExit(String bookingId) async {
+    await _client.rpc(
+      'request_early_exit',
+      params: {'p_booking_id': bookingId},
+    );
+  }
+
+  /// Driver accepts the early exit and sets a new fare.
+  Future<void> acceptEarlyExit({
+    required String bookingId,
+    required double newFare,
+  }) async {
+    await _client.rpc(
+      'accept_early_exit',
+      params: {'p_booking_id': bookingId, 'p_new_fare': newFare},
+    );
+  }
+
+  /// Driver rejects the early exit; ride continues as normal.
+  Future<void> rejectEarlyExit(String bookingId) async {
+    await _client.rpc(
+      'reject_early_exit',
+      params: {'p_booking_id': bookingId},
+    );
+  }
 }

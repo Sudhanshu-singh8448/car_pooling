@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../datasources/trip_remote_datasource.dart';
+import '../../domain/entities/lifecycle_entity.dart';
 import '../../domain/entities/trip_entity.dart';
 
 class TripRepository {
@@ -37,6 +38,7 @@ class TripRepository {
   Future<void> cancelBooking(String bookingId, {String? reason}) =>
       _dataSource.cancelBooking(bookingId, reason: reason);
 
+  // Location tracking
   Future<void> publishLocation({
     required String rideId,
     required double latitude,
@@ -61,4 +63,30 @@ class TripRepository {
 
   Future<void> unsubscribe(RealtimeChannel channel) =>
       _dataSource.unsubscribe(channel);
+
+  // ---------- Lifecycle timeline ----------
+
+  Future<List<LifecycleEvent>> getLifecycleEvents(String rideId) =>
+      _dataSource.getLifecycleEvents(rideId);
+
+  // ---------- Booking accept / reject ----------
+
+  Future<void> acceptBooking(String bookingId) =>
+      _dataSource.acceptBooking(bookingId);
+
+  Future<void> rejectBooking(String bookingId) =>
+      _dataSource.rejectBooking(bookingId);
+
+  // ---------- Half ride / early exit ----------
+
+  Future<void> requestEarlyExit(String bookingId) =>
+      _dataSource.requestEarlyExit(bookingId);
+
+  Future<void> acceptEarlyExit({
+    required String bookingId,
+    required double newFare,
+  }) => _dataSource.acceptEarlyExit(bookingId: bookingId, newFare: newFare);
+
+  Future<void> rejectEarlyExit(String bookingId) =>
+      _dataSource.rejectEarlyExit(bookingId);
 }

@@ -4,23 +4,26 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../domain/entities/ride_entity.dart';
+import '../../domain/entities/ride_match.dart';
 
-/// Card showing a ride's driver, route, time and fare with a Book button.
+/// Card showing a ride's driver, route, time and fare with a Book button,
+/// plus how the ride matches the passenger's own pickup point (midway
+/// boarding, driver arrival ETA and walking distance).
 class RideCard extends StatelessWidget {
-  final RideEntity ride;
+  final RideMatch match;
   final bool isBooking;
   final VoidCallback onBook;
 
   const RideCard({
     super.key,
-    required this.ride,
+    required this.match,
     required this.onBook,
     this.isBooking = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final ride = match.ride;
     final timeText = DateFormat(
       'EEE, d MMM • h:mm a',
     ).format(ride.departureTime);
@@ -95,6 +98,78 @@ class RideCard extends StatelessWidget {
               Icons.location_on,
               AppColors.error,
               ride.destination.address,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            // How this ride matches YOUR pickup point
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.near_me_rounded,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          match.isMidwayPickup
+                              ? 'Driver passes your pickup ~${DateFormat('h:mm a').format(match.pickupEta)}'
+                              : 'Driver departs ${DateFormat('h:mm a').format(match.pickupEta)} from start',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.directions_walk_rounded,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${match.walkLabel} to boarding point',
+                        style: AppTypography.caption,
+                      ),
+                      const Spacer(),
+                      if (match.isMidwayPickup)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
+                          ),
+                          child: Text(
+                            'Midway pickup',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.warning,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             // Time + seats + book

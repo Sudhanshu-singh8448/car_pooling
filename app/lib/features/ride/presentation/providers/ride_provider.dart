@@ -6,6 +6,7 @@ import '../../data/repositories/ride_repository.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../../domain/entities/location_point.dart';
 import '../../domain/entities/ride_entity.dart';
+import '../../domain/entities/ride_match.dart';
 
 // --- DI providers ---
 
@@ -126,7 +127,7 @@ final routeProvider = FutureProvider.autoDispose
 
 // --- Ride search (Available Rides screen) ---
 
-final availableRidesProvider = FutureProvider.autoDispose<List<RideEntity>>((
+final availableRidesProvider = FutureProvider.autoDispose<List<RideMatch>>((
   ref,
 ) async {
   final form = ref.read(rideFormProvider);

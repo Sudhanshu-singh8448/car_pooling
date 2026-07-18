@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notification/presentation/providers/notification_provider.dart';
 import '../../../payment/presentation/providers/payment_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -31,6 +32,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (index == _currentIndex) return;
     setState(() => _currentIndex = index);
     context.go(_tabs[index]);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Start notification listener for badge count
+    Future.microtask(() {
+      ref.read(notificationListenerProvider.notifier).start();
+    });
   }
 
   @override
@@ -125,6 +135,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
         ),
+        // Notification bell with badge
+        _buildNotificationBell(),
         // Profile
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.md),
@@ -212,6 +224,47 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildNotificationBell() {
+    final unreadCount = ref.watch(unreadCountProvider);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          onPressed: () => context.push(RouteNames.notifications),
+          icon: const Icon(
+            Icons.notifications_outlined,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        if (unreadCount > 0)
+          Positioned(
+            top: 6,
+            right: 6,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: AppColors.error,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 18,
+                minHeight: 18,
+              ),
+              child: Text(
+                unreadCount > 9 ? '9+' : '$unreadCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
     );
   }
 

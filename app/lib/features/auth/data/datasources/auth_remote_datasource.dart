@@ -23,12 +23,17 @@ class AuthRemoteDataSource {
     required String password,
     required String name,
     required String phone,
+    String? orgId,
   }) async {
     final normalizedEmail = email.trim().toLowerCase();
     final response = await _client.auth.signUp(
       email: normalizedEmail,
       password: password,
-      data: {'name': name, 'phone': phone},
+      data: {
+        'name': name,
+        'phone': phone,
+        if (orgId != null && orgId.isNotEmpty) 'org_id': orgId,
+      },
     );
 
     final userId = response.user?.id;
@@ -63,7 +68,7 @@ class AuthRemoteDataSource {
       }
       return const SignUpResult(requiresEmailConfirmation: true);
     }
-    
+
     // If we have a session, the user is logged in. We can safely query their
     // profile (which the trigger created).
     return SignUpResult(
@@ -137,7 +142,6 @@ class AuthRemoteDataSource {
       'role': 'employee',
       'platform_access': 'granted',
     };
-    await _client.from('profiles').upsert(profileData);
     return UserEntity.fromMap(profileData);
   }
 

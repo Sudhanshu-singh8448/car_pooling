@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -43,28 +44,40 @@ class MapsService {
 
   MapsService({http.Client? client}) : _client = client ?? http.Client();
 
-  static const _apiKey = AppConstants.googleMapsApiKey;
+  static String get _apiKey => AppConstants.googleMapsApiKey;
 
   /// Autocomplete place search (Places API New).
   Future<List<PlaceSuggestion>> autocomplete(String input) async {
     if (input.trim().length < 3) return [];
-    final response = await _client.post(
-      Uri.parse('https://places.googleapis.com/v1/places:autocomplete'),
-      headers: {'Content-Type': 'application/json', 'X-Goog-Api-Key': _apiKey},
-      body: jsonEncode({
-        'input': input,
-        // Bias towards India (app demo region); adjust as needed.
-        'locationBias': {
-          'rectangle': {
-            'low': {'latitude': 6.5, 'longitude': 68.0},
-            'high': {'latitude': 35.7, 'longitude': 97.5},
-          },
-        },
-      }),
-    );
+    final http.Response response;
+    try {
+      response = await _client
+          .post(
+            Uri.parse('https://places.googleapis.com/v1/places:autocomplete'),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': _apiKey,
+            },
+            body: jsonEncode({
+              'input': input,
+              // Bias towards India (app demo region); adjust as needed.
+              'locationBias': {
+                'rectangle': {
+                  'low': {'latitude': 6.5, 'longitude': 68.0},
+                  'high': {'latitude': 35.7, 'longitude': 97.5},
+                },
+              },
+            }),
+          )
+          .timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      throw Exception('Places request timed out. Check your connection.');
+    } catch (e) {
+      throw Exception('Network error contacting Google Places: $e');
+    }
 
     if (response.statusCode != 200) {
-      throw Exception('Autocomplete failed (${response.statusCode})');
+      throw Exception(_extractGoogleError(response, 'Autocomplete'));
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -90,18 +103,27 @@ class MapsService {
 
   /// Resolve a place ID to coordinates + formatted address.
   Future<LocationPoint> getPlaceLocation(PlaceSuggestion suggestion) async {
-    final response = await _client.get(
-      Uri.parse(
-        'https://places.googleapis.com/v1/places/${suggestion.placeId}',
-      ),
-      headers: {
-        'X-Goog-Api-Key': _apiKey,
-        'X-Goog-FieldMask': 'location,formattedAddress,displayName',
-      },
-    );
+    final http.Response response;
+    try {
+      response = await _client
+          .get(
+            Uri.parse(
+              'https://places.googleapis.com/v1/places/${suggestion.placeId}',
+            ),
+            headers: {
+              'X-Goog-Api-Key': _apiKey,
+              'X-Goog-FieldMask': 'location,formattedAddress,displayName',
+            },
+          )
+          .timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      throw Exception('Place details timed out. Check your connection.');
+    } catch (e) {
+      throw Exception('Network error contacting Google Places: $e');
+    }
 
     if (response.statusCode != 200) {
-      throw Exception('Place details failed (${response.statusCode})');
+      throw Exception(_extractGoogleError(response, 'Place details'));
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -113,6 +135,34 @@ class MapsService {
       lat: (location['latitude'] as num).toDouble(),
       lng: (location['longitude'] as num).toDouble(),
     );
+  }
+
+  /// Pulls a human-readable error message out of a Google Maps Platform
+  /// non-200 response so the UI can show what actually went wrong
+  /// (e.g. "Places API (New) has not been used in project ... or it is
+  /// disabled", or "API keys with referer restrictions cannot be used…").
+  String _extractGoogleError(http.Response response, String operation) {
+    String detail = 'HTTP ${response.statusCode}';
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map<String, dynamic>) {
+        final err = body['error'];
+        if (err is Map<String, dynamic> && err['message'] is String) {
+          detail = err['message'] as String;
+        } else if (body['message'] is String) {
+          detail = body['message'] as String;
+        }
+      }
+    } catch (_) {
+      // Body wasn't JSON — keep the status code.
+    }
+    // Log full body to console so devs can see the raw Google response.
+    // ignore: avoid_print
+    print(
+      '[MapsService] $operation failed (${response.statusCode}): '
+      '${response.body}',
+    );
+    return '$operation failed: $detail';
   }
 
   /// Compute driving route (Routes API v2). Falls back to a straight-line

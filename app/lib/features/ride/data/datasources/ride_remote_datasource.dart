@@ -51,7 +51,12 @@ class RideRemoteDataSource {
     return RideEntity.fromMap(data);
   }
 
-  /// Search for matching published rides via the `search_rides` RPC.
+  /// Search for matching published rides.
+  ///
+  /// Uses the `search_rides_v2` RPC: candidates are filtered by a
+  /// local-day time window (fixes the old UTC date-mismatch bug) and a
+  /// route-corridor bounding box, so midway pickups are included. Falls
+  /// back to the legacy `search_rides` RPC if v2 isn't deployed yet.
   Future<List<RideEntity>> searchRides({
     required LocationPoint pickup,
     required LocationPoint destination,
@@ -59,33 +64,82 @@ class RideRemoteDataSource {
     required int seats,
     double radiusKm = 5,
   }) async {
-    final data = await _client.rpc(
-      'search_rides',
-      params: {
-        'p_pickup_lat': pickup.lat,
-        'p_pickup_lng': pickup.lng,
-        'p_dest_lat': destination.lat,
-        'p_dest_lng': destination.lng,
-        'p_date':
-            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-        'p_seats': seats,
-        'p_radius_km': radiusKm,
-      },
-    );
+    // The searcher picked a LOCAL calendar day — convert to a UTC window.
+    final localDayStart = DateTime(date.year, date.month, date.day);
+    final localDayEnd = localDayStart.add(const Duration(days: 1));
+
+    dynamic data;
+    try {
+      data = await _client.rpc(
+        'search_rides_v2',
+        params: {
+          'p_pickup_lat': pickup.lat,
+          'p_pickup_lng': pickup.lng,
+          'p_dest_lat': destination.lat,
+          'p_dest_lng': destination.lng,
+          'p_start': localDayStart.toUtc().toIso8601String(),
+          'p_end': localDayEnd.toUtc().toIso8601String(),
+          'p_seats': seats,
+          'p_radius_km': radiusKm,
+        },
+      );
+    } on PostgrestException catch (e) {
+      // v2 not deployed yet (PGRST202 = function not found) — legacy path.
+      if (e.code != 'PGRST202') rethrow;
+      data = await _client.rpc(
+        'search_rides',
+        params: {
+          'p_pickup_lat': pickup.lat,
+          'p_pickup_lng': pickup.lng,
+          'p_dest_lat': destination.lat,
+          'p_dest_lng': destination.lng,
+          'p_date':
+              '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+          'p_seats': seats,
+          'p_radius_km': radiusKm,
+        },
+      );
+    }
     return (data as List)
         .map((r) => RideEntity.fromMap(Map<String, dynamic>.from(r as Map)))
         .toList();
   }
 
-  /// Atomically book a ride via the `book_ride` RPC.
+  /// Request a booking (creates with status 'pending').
+  /// The driver must accept/reject before the booking is confirmed.
   Future<BookingEntity> bookRide({
     required String rideId,
     required int seats,
   }) async {
     final data = await _client.rpc(
-      'book_ride',
+      'request_booking',
       params: {'p_ride_id': rideId, 'p_seats': seats},
     );
     return BookingEntity.fromMap(Map<String, dynamic>.from(data as Map));
+  }
+
+  /// Search for recurring rides matching the requested days.
+  Future<List<Map<String, dynamic>>> searchRecurringRides({
+    required LocationPoint pickup,
+    required LocationPoint destination,
+    required List<String> days,
+    required int seats,
+    double radiusKm = 5,
+  }) async {
+    final data = await _client.rpc(
+      'search_recurring_rides',
+      params: {
+        'p_pickup_lat': pickup.lat,
+        'p_pickup_lng': pickup.lng,
+        'p_dest_lat': destination.lat,
+        'p_dest_lng': destination.lng,
+        'p_days': days.join(','),
+        'p_seats': seats,
+        'p_radius_km': radiusKm,
+      },
+    );
+    return (data as List)
+        .map((r) => Map<String, dynamic>.from(r as Map))
+        .toList();
   }
 }

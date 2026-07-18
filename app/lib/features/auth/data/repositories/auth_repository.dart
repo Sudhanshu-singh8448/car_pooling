@@ -11,12 +11,14 @@ class AuthRepository {
     required String password,
     required String name,
     required String phone,
+    String? orgId,
   }) {
     return _remoteDataSource.signUp(
       email: email,
       password: password,
       name: name,
       phone: phone,
+      orgId: orgId,
     );
   }
 

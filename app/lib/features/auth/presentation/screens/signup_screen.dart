@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -27,6 +28,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
+  // Organization picker — pick once at signup, cannot change later.
+  List<_OrgOption> _organizations = const [];
+  String? _selectedOrgId;
+  bool _loadingOrgs = true;
+  String? _orgLoadError;
+
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
@@ -44,6 +51,29 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
+    _loadOrganizations();
+  }
+
+  Future<void> _loadOrganizations() async {
+    try {
+      final data = await Supabase.instance.client.rpc('list_organizations');
+      final list = (data as List<dynamic>? ?? const [])
+          .map((e) => _OrgOption.fromMap(e as Map<String, dynamic>))
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _organizations = list;
+        _loadingOrgs = false;
+        _orgLoadError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadingOrgs = false;
+        _orgLoadError =
+            'Could not load organizations. Ask your administrator to register your company first.';
+      });
+    }
   }
 
   @override
@@ -59,14 +89,26 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedOrgId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please choose your organization.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
 
     ref.read(authNotifierProvider.notifier).clearError();
 
-    final outcome = await ref.read(authNotifierProvider.notifier).signUp(
+    final outcome = await ref
+        .read(authNotifierProvider.notifier)
+        .signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
+          orgId: _selectedOrgId,
         );
 
     if (mounted) {
@@ -75,7 +117,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
       } else if (outcome == SignUpOutcome.needsEmailConfirmation) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Please check your email to confirm your account.'),
+            content: Text(
+              'Registration successful! Please check your email to confirm your account.',
+            ),
             backgroundColor: AppColors.success,
             duration: Duration(seconds: 5),
           ),
@@ -310,6 +354,77 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                             ),
                             const SizedBox(height: AppSpacing.md),
 
+                            // Organization — one-time choice, cannot change later
+                            if (_loadingOrgs)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text('Loading organizations…'),
+                                  ],
+                                ),
+                              )
+                            else if (_orgLoadError != null)
+                              Container(
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm,
+                                  ),
+                                ),
+                                child: Text(
+                                  _orgLoadError!,
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              )
+                            else
+                              DropdownButtonFormField<String>(
+                                initialValue: _selectedOrgId,
+                                isExpanded: true,
+                                items: _organizations
+                                    .map(
+                                      (o) => DropdownMenuItem<String>(
+                                        value: o.id,
+                                        child: Text(
+                                          o.name,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (v) =>
+                                    setState(() => _selectedOrgId = v),
+                                validator: (v) => v == null || v.isEmpty
+                                    ? 'Please choose your organization'
+                                    : null,
+                                decoration: const InputDecoration(
+                                  hintText: 'Select your organization',
+                                  prefixIcon: Icon(Icons.business_outlined),
+                                ),
+                              ),
+                            if (!_loadingOrgs && _orgLoadError == null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6, left: 4),
+                                child: Text(
+                                  'You can only choose this once.',
+                                  style: AppTypography.caption.copyWith(
+                                    color: AppColors.textTertiary,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: AppSpacing.md),
+
                             // Password
                             TextFormField(
                               controller: _passwordController,
@@ -416,4 +531,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
       ),
     );
   }
+}
+
+class _OrgOption {
+  final String id;
+  final String name;
+
+  const _OrgOption({required this.id, required this.name});
+
+  factory _OrgOption.fromMap(Map<String, dynamic> map) => _OrgOption(
+    id: map['id'] as String,
+    name: (map['name'] as String?) ?? 'Unnamed organization',
+  );
 }

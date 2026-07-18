@@ -22,4 +22,7 @@ class RouteNames {
   static const String reports = '/reports';
   static const String adminDashboard = '/admin';
   static const String chat = '/chat';
+  static const String notifications = '/notifications';
+  static const String feedback = '/feedback';
+  static const String rideTracking = '/ride-tracking';
 }

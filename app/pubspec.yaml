@@ -54,6 +54,7 @@ dependencies:
   permission_handler: ^11.4.0
   image_picker: ^1.1.2
   timeago: ^3.7.0
+  flutter_dotenv: ^6.0.1
 
 dev_dependencies:
   flutter_test:
@@ -68,5 +69,6 @@ flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/images/
     - assets/icons/

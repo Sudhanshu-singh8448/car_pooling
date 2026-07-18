@@ -110,6 +110,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String password,
     required String name,
     required String phone,
+    String? orgId,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
@@ -118,6 +119,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
         name: name,
         phone: phone,
+        orgId: orgId,
       );
       if (result.requiresEmailConfirmation) {
         state = const AuthState(isLoading: false);

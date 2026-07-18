@@ -8,7 +8,9 @@ import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/feedback/presentation/screens/feedback_screen.dart';
 import '../../features/history/presentation/screens/ride_history_screen.dart';
+import '../../features/notification/presentation/screens/notification_center_screen.dart';
 import '../../features/payment/presentation/screens/payment_method_screen.dart';
 import '../../features/payment/presentation/screens/wallet_screen.dart';
 import '../../features/reports/presentation/screens/reports_screen.dart';
@@ -104,6 +106,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: RouteNames.adminDashboard,
         builder: (context, state) => const AdminDashboardScreen(),
       ),
+      GoRoute(
+        path: RouteNames.notifications,
+        builder: (context, state) => const NotificationCenterScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.feedback,
+        builder: (context, state) {
+          final args = state.extra as Map<String, dynamic>;
+          return FeedbackScreen(
+            rideId: args['ride_id'] as String,
+            bookingId: args['booking_id'] as String,
+            revieweeId: args['reviewee_id'] as String,
+            revieweeName: args['reviewee_name'] as String? ?? 'User',
+          );
+        },
+      ),
       ShellRoute(
         builder: (context, state, child) => DashboardScreen(child: child),
         routes: [
@@ -137,3 +155,4 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
