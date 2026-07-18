@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../payment/presentation/providers/payment_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   final Widget child;
@@ -92,9 +93,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       actions: [
         // Wallet
         IconButton(
-          onPressed: () {
-            // Phase 4 — Wallet
-          },
+          onPressed: () => context.push(RouteNames.wallet),
           icon: Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
@@ -111,7 +110,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     size: 18, color: AppColors.primary),
                 const SizedBox(width: 4),
                 Text(
-                  'Wallet',
+                  ref.watch(walletProvider).valueOrNull != null
+                      ? '₹ ${ref.watch(walletProvider).value!.balance.toStringAsFixed(0)}'
+                      : 'Wallet',
                   style: AppTypography.caption.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,

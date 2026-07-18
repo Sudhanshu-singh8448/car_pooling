@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/route_names.dart';
@@ -6,7 +5,23 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
+import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/chat/presentation/screens/chat_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/history/presentation/screens/ride_history_screen.dart';
+import '../../features/payment/presentation/screens/payment_method_screen.dart';
+import '../../features/payment/presentation/screens/wallet_screen.dart';
+import '../../features/reports/presentation/screens/reports_screen.dart';
+import '../../features/ride/presentation/screens/dashboard_home_screen.dart';
+import '../../features/ride/presentation/screens/route_confirmation_screen.dart';
+import '../../features/ride/presentation/screens/available_rides_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/trip/domain/entities/trip_entity.dart';
+import '../../features/trip/presentation/screens/live_tracking_screen.dart';
+import '../../features/trip/presentation/screens/my_trips_screen.dart';
+import '../../features/trip/presentation/screens/trip_details_screen.dart';
+import '../../features/trip/presentation/screens/trip_finish_screen.dart';
+import '../../features/vehicle/presentation/screens/my_vehicles_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -16,7 +31,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final isLoggedIn = authState.user != null;
-      final isAuthRoute = state.matchedLocation == RouteNames.login ||
+      final isAuthRoute =
+          state.matchedLocation == RouteNames.login ||
           state.matchedLocation == RouteNames.signUp;
       final isSplash = state.matchedLocation == RouteNames.splash;
 
@@ -44,70 +60,81 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: RouteNames.signUp,
         builder: (context, state) => const SignUpScreen(),
       ),
+      GoRoute(
+        path: RouteNames.routeConfirmation,
+        builder: (context, state) => const RouteConfirmationScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.availableRides,
+        builder: (context, state) => const AvailableRidesScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.tripDetails,
+        builder: (context, state) =>
+            TripDetailsScreen(trip: state.extra! as TripEntity),
+      ),
+      GoRoute(
+        path: RouteNames.liveTracking,
+        builder: (context, state) =>
+            LiveTrackingScreen(trip: state.extra! as TripEntity),
+      ),
+      GoRoute(
+        path: RouteNames.tripFinish,
+        builder: (context, state) =>
+            TripFinishScreen(trip: state.extra! as TripEntity),
+      ),
+      GoRoute(
+        path: RouteNames.paymentMethod,
+        builder: (context, state) =>
+            PaymentMethodScreen(trip: state.extra! as TripEntity),
+      ),
+      GoRoute(
+        path: RouteNames.chat,
+        builder: (context, state) =>
+            ChatScreen(args: state.extra! as ChatArgs),
+      ),
+      GoRoute(
+        path: RouteNames.wallet,
+        builder: (context, state) => const WalletScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.reports,
+        builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.adminDashboard,
+        builder: (context, state) => const AdminDashboardScreen(),
+      ),
       ShellRoute(
         builder: (context, state, child) => DashboardScreen(child: child),
         routes: [
           GoRoute(
             path: RouteNames.dashboard,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: _DashboardHome(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DashboardHomeScreen()),
           ),
           GoRoute(
             path: RouteNames.myTrips,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: _PlaceholderScreen(title: 'My Trips'),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: MyTripsScreen()),
           ),
           GoRoute(
             path: RouteNames.rideHistory,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: _PlaceholderScreen(title: 'Ride History'),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: RideHistoryScreen()),
           ),
           GoRoute(
             path: RouteNames.myVehicle,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: _PlaceholderScreen(title: 'My Vehicle'),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: MyVehiclesScreen()),
           ),
           GoRoute(
             path: RouteNames.settings,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: _PlaceholderScreen(title: 'Settings'),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SettingsScreen()),
           ),
         ],
       ),
     ],
   );
 });
-
-/// The main dashboard home content (Find/Offer ride tabs)
-class _DashboardHome extends StatelessWidget {
-  const _DashboardHome();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Dashboard — Find & Offer Rides\n(Phase 2)'),
-    );
-  }
-}
-
-/// Placeholder used for tabs that will be built in later phases
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const _PlaceholderScreen({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        '$title\n(Coming in next phase)',
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-    );
-  }
-}

@@ -43,7 +43,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
 
     _animController.forward();
-    _navigateAfterSplash();
+    // Defer auth check to avoid modifying provider during build
+    Future.microtask(() => _navigateAfterSplash());
   }
 
   Future<void> _navigateAfterSplash() async {
