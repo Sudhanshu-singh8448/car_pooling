@@ -8,7 +8,7 @@ Map<String, dynamic> _matchMap({
   required int matchCount,
 }) {
   return {
-    'id': 'ride-1',
+    'id': 'recurrence-1',
     'ride_id': 'ride-1',
     'driver_id': 'driver-1',
     'driver_name': 'Driver',
@@ -49,6 +49,7 @@ void main() {
     );
 
     expect(match.isExactMatch, isTrue);
+    expect(match.ride.id, 'ride-1');
     expect(match.matchCount, 3);
     expect(match.matchPercentage, 100);
     expect(match.ride.isRecurring, isTrue);

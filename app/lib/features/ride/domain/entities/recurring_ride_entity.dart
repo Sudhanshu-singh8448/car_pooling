@@ -32,6 +32,9 @@ class RecurringRideEntity extends Equatable {
   factory RecurringRideEntity.fromMap(Map<String, dynamic> map) {
     final days = _stringList(map['recurrence_days'] ?? map['recurring_days']);
     final rideMap = Map<String, dynamic>.from(map);
+    if (map['ride_id'] != null) {
+      rideMap['id'] = map['ride_id'];
+    }
     rideMap['is_recurring'] = true;
     rideMap['recurring_days'] = days.join(',');
 

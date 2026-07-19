@@ -419,22 +419,57 @@ class _RecurringCard extends ConsumerWidget {
                       ? null
                       : () async {
                           final messenger = ScaffoldMessenger.of(context);
-                          final b = await ref
+                          final router = GoRouter.of(context);
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Confirm Booking'),
+                              content: Text(
+                                'Request $seats seat${seats == 1 ? '' : 's'} on this recurring ride?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Request'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed != true || !context.mounted) return;
+
+                          final booking = await ref
                               .read(bookingActionProvider.notifier)
                               .book(rideId, seats);
                           if (context.mounted) {
-                            messenger.showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  b == null
-                                      ? (ref
-                                                .read(bookingActionProvider)
-                                                .errorMessage ??
-                                            'Booking failed')
-                                      : 'Booking requested!',
+                            if (booking != null) {
+                              ref.read(rideFormProvider.notifier).reset();
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Ride requested! The driver will be notified.',
+                                  ),
+                                  backgroundColor: AppColors.success,
                                 ),
-                              ),
-                            );
+                              );
+                              router.go(RouteNames.myTrips);
+                            } else {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    ref
+                                            .read(bookingActionProvider)
+                                            .errorMessage ??
+                                        'Booking failed',
+                                  ),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                              ref.invalidate(recurringRidesProvider);
+                            }
                           }
                         },
                   child: isBooking
