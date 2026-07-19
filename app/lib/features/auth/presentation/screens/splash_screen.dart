@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_names.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -14,45 +13,36 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animController;
-  late Animation<double> _fadeAnim;
-  late Animation<double> _scaleAnim;
-  late Animation<Offset> _slideAnim;
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  late VideoPlayerController _controller;
+  bool _isVideoInitialized = false;
 
   @override
   void initState() {
     super.initState();
-
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animController, curve: const Interval(0, 0.6, curve: Curves.easeOut)),
-    );
-
-    _scaleAnim = Tween<double>(begin: 0.5, end: 1).animate(
-      CurvedAnimation(parent: _animController, curve: const Interval(0, 0.6, curve: Curves.elasticOut)),
-    );
-
-    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(parent: _animController, curve: const Interval(0.3, 0.8, curve: Curves.easeOut)),
-    );
-
-    _animController.forward();
-    // Defer auth check to avoid modifying provider during build
-    Future.microtask(() => _navigateAfterSplash());
+    _controller = VideoPlayerController.asset('assets/videos/splash_video.mp4')
+      ..initialize().then((_) {
+        setState(() {
+          _isVideoInitialized = true;
+        });
+        _controller.setLooping(false);
+        _controller.play();
+        _navigateAfterSplash();
+      });
   }
 
   Future<void> _navigateAfterSplash() async {
-    // Check auth status while showing splash
-    await ref.read(authNotifierProvider.notifier).checkAuthStatus();
-
-    // Wait for splash animation to finish
-    await Future.delayed(AppConstants.splashDuration);
+    final videoDuration = _controller.value.duration;
+    
+    // Check auth status and wait for video to finish simultaneously
+    await Future.wait([
+      ref.read(authNotifierProvider.notifier).checkAuthStatus(),
+      Future.delayed(
+        videoDuration > AppConstants.splashDuration 
+            ? videoDuration 
+            : AppConstants.splashDuration
+      ),
+    ]);
 
     if (!mounted) return;
 
@@ -66,114 +56,27 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   void dispose() {
-    _animController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.primary,
-              AppColors.secondary,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 3),
-
-              // Logo / Icon
-              AnimatedBuilder(
-                animation: _animController,
-                builder: (context, child) {
-                  return FadeTransition(
-                    opacity: _fadeAnim,
-                    child: ScaleTransition(
-                      scale: _scaleAnim,
-                      child: child,
-                    ),
-                  );
-                },
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: const Icon(
-                    Icons.directions_car_rounded,
-                    size: 64,
-                    color: AppColors.white,
+      backgroundColor: Colors.black,
+      body: Center(
+        child: _isVideoInitialized
+            ? SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _controller.value.size.width,
+                    height: _controller.value.size.height,
+                    child: VideoPlayer(_controller),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // App name
-              SlideTransition(
-                position: _slideAnim,
-                child: FadeTransition(
-                  opacity: _fadeAnim,
-                  child: Text(
-                    AppConstants.appName,
-                    style: AppTypography.h1.copyWith(
-                      color: AppColors.white,
-                      fontSize: 36,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Tagline
-              SlideTransition(
-                position: _slideAnim,
-                child: FadeTransition(
-                  opacity: _fadeAnim,
-                  child: Text(
-                    AppConstants.appTagline,
-                    style: AppTypography.bodyLarge.copyWith(
-                      color: AppColors.white.withValues(alpha: 0.85),
-                      fontWeight: FontWeight.w300,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ),
-
-              const Spacer(flex: 3),
-
-              // Loading indicator
-              FadeTransition(
-                opacity: _fadeAnim,
-                child: const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    color: AppColors.white,
-                    strokeWidth: 2.5,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 48),
-            ],
-          ),
-        ),
+              )
+            : const CircularProgressIndicator(color: Colors.white),
       ),
     );
   }

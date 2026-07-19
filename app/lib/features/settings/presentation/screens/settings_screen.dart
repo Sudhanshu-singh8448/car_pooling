@@ -78,6 +78,12 @@ class SettingsScreen extends ConsumerWidget {
           _sectionTitle('Account'),
           _tile(
             context,
+            Icons.manage_accounts_outlined,
+            'Edit Profile',
+            () => context.push(RouteNames.profile),
+          ),
+          _tile(
+            context,
             Icons.account_balance_wallet_outlined,
             'Wallet',
             () => context.push(RouteNames.wallet),

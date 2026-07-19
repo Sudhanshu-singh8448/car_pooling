@@ -204,6 +204,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const SizedBox(height: AppSpacing.xxl),
                 const Divider(),
                 ListTile(
+                  leading: const Icon(Icons.manage_accounts_outlined),
+                  title: const Text('Edit Profile'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.push(RouteNames.profile);
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.logout, color: AppColors.error),
                   title: Text(
                     'Logout',

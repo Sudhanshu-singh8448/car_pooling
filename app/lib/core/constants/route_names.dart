@@ -19,6 +19,7 @@ class RouteNames {
   static const String myVehicle = '/my-vehicle';
   static const String addVehicle = '/add-vehicle';
   static const String settings = '/settings';
+  static const String profile = '/profile';
   static const String reports = '/reports';
   static const String adminDashboard = '/admin';
   static const String chat = '/chat';

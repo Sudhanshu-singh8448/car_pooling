@@ -18,6 +18,7 @@ import '../../features/ride/presentation/screens/dashboard_home_screen.dart';
 import '../../features/ride/presentation/screens/route_confirmation_screen.dart';
 import '../../features/ride/presentation/screens/available_rides_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/profile_screen.dart';
 import '../../features/trip/domain/entities/trip_entity.dart';
 import '../../features/trip/presentation/screens/live_tracking_screen.dart';
 import '../../features/trip/presentation/screens/my_trips_screen.dart';
@@ -109,6 +110,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.notifications,
         builder: (context, state) => const NotificationCenterScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.profile,
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: RouteNames.feedback,

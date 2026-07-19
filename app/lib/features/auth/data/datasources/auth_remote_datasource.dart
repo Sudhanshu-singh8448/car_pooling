@@ -158,6 +158,56 @@ class AuthRemoteDataSource {
     }
   }
 
+  /// Update the editable profile fields and keep Supabase Auth metadata in
+  /// sync with the profile row.
+  Future<UserEntity> updateProfile({
+    required UserEntity currentUser,
+    required String name,
+    required String email,
+    required String phone,
+    String? department,
+    String? manager,
+    String? location,
+  }) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    final authUser = _client.auth.currentUser;
+    if (authUser == null || authUser.id != currentUser.id) {
+      throw Exception('Not authenticated');
+    }
+
+    final emailChanged = normalizedEmail != (authUser.email ?? '').toLowerCase();
+    await _client.auth.updateUser(
+      UserAttributes(
+        email: emailChanged ? normalizedEmail : null,
+        data: {
+          'name': name.trim(),
+          'phone': phone.trim(),
+        },
+      ),
+    );
+
+    final data = await _client
+        .from('profiles')
+        .update({
+          'name': name.trim(),
+          'email': normalizedEmail,
+          'phone': phone.trim(),
+          'department': _nullableValue(department),
+          'manager': _nullableValue(manager),
+          'location': _nullableValue(location),
+        })
+        .eq('id', currentUser.id)
+        .select()
+        .single();
+
+    return UserEntity.fromMap(data);
+  }
+
+  String? _nullableValue(String? value) {
+    final trimmed = value?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
   /// Sign out
   Future<void> signOut() async {
     await _client.auth.signOut();

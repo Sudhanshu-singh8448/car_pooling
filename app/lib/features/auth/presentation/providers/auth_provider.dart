@@ -104,6 +104,43 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Save the editable profile fields and replace the cached user so every
+  /// profile header in the app updates immediately.
+  Future<String?> updateProfile({
+    required String name,
+    required String email,
+    required String phone,
+    String? department,
+    String? manager,
+    String? location,
+  }) async {
+    final currentUser = state.user;
+    if (currentUser == null) return 'You are not signed in.';
+
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final user = await _repository.updateProfile(
+        currentUser: currentUser,
+        name: name,
+        email: email,
+        phone: phone,
+        department: department,
+        manager: manager,
+        location: location,
+      );
+      state = AuthState(user: user, isLoading: false);
+      return null;
+    } catch (e) {
+      final error = e.toString().toLowerCase();
+      final message = error.contains('email') &&
+              (error.contains('invalid') || error.contains('already'))
+          ? 'That email address cannot be used.'
+          : 'Could not update your profile. Please try again.';
+      state = state.copyWith(isLoading: false, errorMessage: message);
+      return message;
+    }
+  }
+
   /// Sign up with email, password, name, phone
   Future<SignUpOutcome> signUp({
     required String email,

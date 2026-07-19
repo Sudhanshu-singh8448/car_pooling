@@ -30,6 +30,26 @@ class AuthRepository {
     return _remoteDataSource.getCurrentUser();
   }
 
+  Future<UserEntity> updateProfile({
+    required UserEntity currentUser,
+    required String name,
+    required String email,
+    required String phone,
+    String? department,
+    String? manager,
+    String? location,
+  }) {
+    return _remoteDataSource.updateProfile(
+      currentUser: currentUser,
+      name: name,
+      email: email,
+      phone: phone,
+      department: department,
+      manager: manager,
+      location: location,
+    );
+  }
+
   Future<void> signOut() {
     return _remoteDataSource.signOut();
   }
