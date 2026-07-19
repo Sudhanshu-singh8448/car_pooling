@@ -237,31 +237,36 @@ class _RecurringRidesView extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.event_repeat_outlined,
-                        size: 64, color: AppColors.textTertiary),
+                    const Icon(
+                      Icons.event_repeat_outlined,
+                      size: 64,
+                      color: AppColors.textTertiary,
+                    ),
                     const SizedBox(height: AppSpacing.md),
-                    Text('No recurring rides found',
-                        style: AppTypography.h4),
+                    Text('No recurring rides found', style: AppTypography.h4),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'Nobody is running a matching weekly ride yet. '
                       'Try loosening the days or check back later.',
                       textAlign: TextAlign.center,
-                      style: AppTypography.bodySmall
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
             );
           }
-          final exact =
-              rides.where((r) => r['is_exact_match'] == true).toList();
-          final suggested = rides
-              .where((r) => r['is_exact_match'] != true)
-              .toList()
-            ..sort((a, b) => (b['match_count'] as int? ?? 0)
-                .compareTo(a['match_count'] as int? ?? 0));
+          final exact = rides
+              .where((r) => r['is_exact_match'] == true)
+              .toList();
+          final suggested =
+              rides.where((r) => r['is_exact_match'] != true).toList()..sort(
+                (a, b) => (b['match_count'] as int? ?? 0).compareTo(
+                  a['match_count'] as int? ?? 0,
+                ),
+              );
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(recurringRidesProvider),
             child: ListView(
@@ -277,11 +282,14 @@ class _RecurringRidesView extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.sm),
                 ],
                 if (suggested.isNotEmpty) ...[
-                  Text('Other Suggested Matches',
-                      style: AppTypography.labelLarge),
+                  Text(
+                    'Other Suggested Matches',
+                    style: AppTypography.labelLarge,
+                  ),
                   const SizedBox(height: AppSpacing.sm),
-                  ...suggested
-                      .map((r) => _RecurringCard(data: r, seats: seats)),
+                  ...suggested.map(
+                    (r) => _RecurringCard(data: r, seats: seats),
+                  ),
                 ],
               ],
             ),
@@ -329,44 +337,60 @@ class _RecurringCard extends ConsumerWidget {
                 if (isExact)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.success.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text('Exact',
-                        style: AppTypography.caption
-                            .copyWith(color: AppColors.success)),
+                    child: Text(
+                      'Exact',
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.success,
+                      ),
+                    ),
                   )
                 else
-                  Text('$matchCount / $total days',
-                      style: AppTypography.caption
-                          .copyWith(color: AppColors.textSecondary)),
+                  Text(
+                    '$matchCount / $total days',
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text('${data['pickup_address'] ?? ''}  →  '
-                '${data['destination_address'] ?? ''}',
-                style: AppTypography.bodySmall),
+            Text(
+              '${data['pickup_address'] ?? ''}  →  '
+              '${data['destination_address'] ?? ''}',
+              style: AppTypography.bodySmall,
+            ),
             const SizedBox(height: AppSpacing.xs),
             Wrap(
               spacing: 4,
               children: days
-                  .map((d) => Chip(
-                        label: Text(d.substring(0, 3).toUpperCase(),
-                            style: const TextStyle(fontSize: 11)),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
-                      ))
+                  .map(
+                    (d) => Chip(
+                      label: Text(
+                        d.substring(0, 3).toUpperCase(),
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  )
                   .toList(),
             ),
             const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
-                Text('₹${fare.toStringAsFixed(0)}/seat',
-                    style: AppTypography.labelMedium
-                        .copyWith(color: AppColors.primary)),
+                Text(
+                  '₹${fare.toStringAsFixed(0)}/seat',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
                 const Spacer(),
                 ElevatedButton(
                   onPressed: isBooking
@@ -377,22 +401,26 @@ class _RecurringCard extends ConsumerWidget {
                               .read(bookingActionProvider.notifier)
                               .book(rideId, seats);
                           if (context.mounted) {
-                            messenger.showSnackBar(SnackBar(
-                              content: Text(b == null
-                                  ? (ref
-                                          .read(bookingActionProvider)
-                                          .errorMessage ??
-                                      'Booking failed')
-                                  : 'Booking requested!'),
-                            ));
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  b == null
+                                      ? (ref
+                                                .read(bookingActionProvider)
+                                                .errorMessage ??
+                                            'Booking failed')
+                                      : 'Booking requested!',
+                                ),
+                              ),
+                            );
                           }
                         },
                   child: isBooking
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child:
-                              CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Text('Request'),
                 ),
               ],

@@ -201,10 +201,18 @@ class TripDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPassengersCard(BuildContext context, WidgetRef ref, bool isBusy) {
+  Widget _buildPassengersCard(
+    BuildContext context,
+    WidgetRef ref,
+    bool isBusy,
+  ) {
     // Separate pending and accepted/booked passengers
-    final pending = trip.passengers.where((p) => p.bookingStatus == 'pending').toList();
-    final confirmed = trip.passengers.where((p) => p.bookingStatus != 'pending').toList();
+    final pending = trip.passengers
+        .where((p) => p.bookingStatus == 'pending')
+        .toList();
+    final confirmed = trip.passengers
+        .where((p) => p.bookingStatus != 'pending')
+        .toList();
 
     return Card(
       child: Padding(
@@ -227,7 +235,13 @@ class TripDetailsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               ...pending.map(
-                (p) => _buildPassengerTile(context, ref, p, isBusy, isPending: true),
+                (p) => _buildPassengerTile(
+                  context,
+                  ref,
+                  p,
+                  isBusy,
+                  isPending: true,
+                ),
               ),
               if (confirmed.isNotEmpty) const Divider(height: AppSpacing.xxl),
             ],
@@ -281,10 +295,7 @@ class TripDetailsScreen extends ConsumerWidget {
                 IconButton(
                   onPressed: () => context.push(
                     RouteNames.chat,
-                    extra: ChatArgs(
-                      bookingId: p.bookingId,
-                      peerName: p.name,
-                    ),
+                    extra: ChatArgs(bookingId: p.bookingId, peerName: p.name),
                   ),
                   icon: const Icon(
                     Icons.chat_bubble_outline,
@@ -336,7 +347,10 @@ class TripDetailsScreen extends ConsumerWidget {
                         padding: EdgeInsets.zero,
                       ),
                       icon: const Icon(Icons.check, size: 16),
-                      label: const Text('Accept', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'Accept',
+                        style: TextStyle(fontSize: 12),
+                      ),
                     ),
                   ),
                 ),
@@ -367,7 +381,10 @@ class TripDetailsScreen extends ConsumerWidget {
                         padding: EdgeInsets.zero,
                       ),
                       icon: const Icon(Icons.close, size: 16),
-                      label: const Text('Reject', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'Reject',
+                        style: TextStyle(fontSize: 12),
+                      ),
                     ),
                   ),
                 ),
@@ -686,8 +703,9 @@ class TripDetailsScreen extends ConsumerWidget {
               TextField(
                 controller: controller,
                 autofocus: true,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   suffixText: 'km',
                   border: OutlineInputBorder(),
@@ -697,8 +715,9 @@ class TripDetailsScreen extends ConsumerWidget {
               Text(
                 'Full fare: ₹${fare.toStringAsFixed(0)}. '
                 'You will only be charged for the distance travelled.',
-                style: AppTypography.caption
-                    .copyWith(color: AppColors.textSecondary),
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -1011,21 +1030,14 @@ class _LifecycleTimeline extends ConsumerWidget {
                   ),
                 ),
                 if (!isLast)
-                  Expanded(
-                    child: Container(
-                      width: 2,
-                      color: AppColors.border,
-                    ),
-                  ),
+                  Expanded(child: Container(width: 2, color: AppColors.border)),
               ],
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(
-                bottom: isLast ? 0 : AppSpacing.md,
-              ),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -94,7 +94,7 @@ class TripRepository {
     required String bookingId,
     required double completedKm,
   }) => _dataSource.endRideEarlyAuto(
-        bookingId: bookingId,
-        completedKm: completedKm,
-      );
+    bookingId: bookingId,
+    completedKm: completedKm,
+  );
 }

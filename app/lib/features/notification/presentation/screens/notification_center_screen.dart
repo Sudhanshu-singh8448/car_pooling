@@ -78,8 +78,9 @@ class NotificationCenterScreen extends ConsumerWidget {
           Text(
             'You\'ll see booking requests, ride updates,\nand payment alerts here.',
             textAlign: TextAlign.center,
-            style:
-                AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textTertiary,
+            ),
           ),
         ],
       ),
@@ -93,8 +94,7 @@ class NotificationCenterScreen extends ConsumerWidget {
         children: [
           const Icon(Icons.error_outline, size: 48, color: AppColors.error),
           const SizedBox(height: AppSpacing.md),
-          Text('Failed to load notifications',
-              style: AppTypography.labelLarge),
+          Text('Failed to load notifications', style: AppTypography.labelLarge),
           const SizedBox(height: AppSpacing.sm),
           Text(error, style: AppTypography.caption),
           const SizedBox(height: AppSpacing.lg),
@@ -113,10 +113,7 @@ class _NotificationTile extends ConsumerWidget {
   final NotificationEntity notification;
   final bool isLoading;
 
-  const _NotificationTile({
-    required this.notification,
-    this.isLoading = false,
-  });
+  const _NotificationTile({required this.notification, this.isLoading = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -140,10 +137,7 @@ class _NotificationTile extends ConsumerWidget {
                 ? AppColors.surface
                 : AppColors.primary.withValues(alpha: 0.04),
             border: Border(
-              bottom: BorderSide(
-                color: AppColors.divider,
-                width: 0.5,
-              ),
+              bottom: BorderSide(color: AppColors.divider, width: 0.5),
             ),
           ),
           padding: const EdgeInsets.symmetric(
@@ -172,7 +166,10 @@ class _NotificationTile extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          timeago.format(notification.createdAt, locale: 'en_short'),
+                          timeago.format(
+                            notification.createdAt,
+                            locale: 'en_short',
+                          ),
                           style: AppTypography.caption.copyWith(
                             color: AppColors.textTertiary,
                             fontSize: 11,
@@ -239,8 +236,7 @@ class _NotificationTile extends ConsumerWidget {
         padding: const EdgeInsets.only(top: AppSpacing.xs),
         child: Text(
           'Handled',
-          style: AppTypography.caption
-              .copyWith(color: AppColors.textTertiary),
+          style: AppTypography.caption.copyWith(color: AppColors.textTertiary),
         ),
       );
     }
@@ -261,8 +257,9 @@ class _NotificationTile extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(error ?? 'Booking accepted! 🎉'),
-                            backgroundColor:
-                                error != null ? AppColors.error : AppColors.success,
+                            backgroundColor: error != null
+                                ? AppColors.error
+                                : AppColors.success,
                           ),
                         );
                       }
@@ -291,8 +288,9 @@ class _NotificationTile extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(error ?? 'Booking rejected.'),
-                            backgroundColor:
-                                error != null ? AppColors.error : AppColors.warning,
+                            backgroundColor: error != null
+                                ? AppColors.error
+                                : AppColors.warning,
                           ),
                         );
                       }
@@ -313,9 +311,7 @@ class _NotificationTile extends ConsumerWidget {
   void _handleTap(BuildContext context, WidgetRef ref) {
     // Mark as read
     if (!notification.isRead) {
-      ref
-          .read(notificationActionProvider.notifier)
-          .markAsRead(notification.id);
+      ref.read(notificationActionProvider.notifier).markAsRead(notification.id);
     }
     // Navigate based on deep link. Only a small set of safe routes
     // (that don't require typed `extra` objects) are honoured — anything

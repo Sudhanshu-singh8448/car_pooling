@@ -148,15 +148,17 @@ final availableRidesProvider = FutureProvider.autoDispose<List<RideMatch>>((
 // group results into "Exact Matches" and "Other Suggested Matches".
 final recurringRidesProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-  final form = ref.read(rideFormProvider);
-  if (!form.isValid || form.recurringDays.isEmpty) return const [];
-  return ref.read(rideRemoteDataSourceProvider).searchRecurringRides(
-        pickup: form.pickup!,
-        destination: form.destination!,
-        days: form.recurringDays.toList(),
-        seats: form.seats,
-      );
-});
+      final form = ref.read(rideFormProvider);
+      if (!form.isValid || form.recurringDays.isEmpty) return const [];
+      return ref
+          .read(rideRemoteDataSourceProvider)
+          .searchRecurringRides(
+            pickup: form.pickup!,
+            destination: form.destination!,
+            days: form.recurringDays.toList(),
+            seats: form.seats,
+          );
+    });
 
 // --- Booking action ---
 

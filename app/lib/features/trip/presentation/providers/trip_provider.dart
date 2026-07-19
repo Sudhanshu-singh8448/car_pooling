@@ -25,12 +25,10 @@ final pastTripsProvider = FutureProvider<List<TripEntity>>((ref) async {
 });
 
 /// Lifecycle events for a ride (timeline).
-final lifecycleEventsProvider =
-    FutureProvider.autoDispose.family<List<LifecycleEvent>, String>(
-  (ref, rideId) {
-    return ref.read(tripRepositoryProvider).getLifecycleEvents(rideId);
-  },
-);
+final lifecycleEventsProvider = FutureProvider.autoDispose
+    .family<List<LifecycleEvent>, String>((ref, rideId) {
+      return ref.read(tripRepositoryProvider).getLifecycleEvents(rideId);
+    });
 
 /// Trip lifecycle actions with loading state.
 class TripActionNotifier extends StateNotifier<bool> {
@@ -70,19 +68,16 @@ class TripActionNotifier extends StateNotifier<bool> {
 
   // ---------- Booking accept / reject ----------
 
-  Future<String?> acceptBooking(String bookingId) => _run(
-    () => _ref.read(tripRepositoryProvider).acceptBooking(bookingId),
-  );
+  Future<String?> acceptBooking(String bookingId) =>
+      _run(() => _ref.read(tripRepositoryProvider).acceptBooking(bookingId));
 
-  Future<String?> rejectBooking(String bookingId) => _run(
-    () => _ref.read(tripRepositoryProvider).rejectBooking(bookingId),
-  );
+  Future<String?> rejectBooking(String bookingId) =>
+      _run(() => _ref.read(tripRepositoryProvider).rejectBooking(bookingId));
 
   // ---------- Half ride / early exit ----------
 
-  Future<String?> requestEarlyExit(String bookingId) => _run(
-    () => _ref.read(tripRepositoryProvider).requestEarlyExit(bookingId),
-  );
+  Future<String?> requestEarlyExit(String bookingId) =>
+      _run(() => _ref.read(tripRepositoryProvider).requestEarlyExit(bookingId));
 
   Future<String?> acceptEarlyExit({
     required String bookingId,
@@ -93,9 +88,8 @@ class TripActionNotifier extends StateNotifier<bool> {
         .acceptEarlyExit(bookingId: bookingId, newFare: newFare),
   );
 
-  Future<String?> rejectEarlyExit(String bookingId) => _run(
-    () => _ref.read(tripRepositoryProvider).rejectEarlyExit(bookingId),
-  );
+  Future<String?> rejectEarlyExit(String bookingId) =>
+      _run(() => _ref.read(tripRepositoryProvider).rejectEarlyExit(bookingId));
 
   /// Passenger ends the ride early. Fare becomes proportional to
   /// [completedKm] / total distance of the ride.
@@ -103,10 +97,9 @@ class TripActionNotifier extends StateNotifier<bool> {
     required String bookingId,
     required double completedKm,
   }) => _run(
-    () => _ref.read(tripRepositoryProvider).endRideEarlyAuto(
-          bookingId: bookingId,
-          completedKm: completedKm,
-        ),
+    () => _ref
+        .read(tripRepositoryProvider)
+        .endRideEarlyAuto(bookingId: bookingId, completedKm: completedKm),
   );
 }
 

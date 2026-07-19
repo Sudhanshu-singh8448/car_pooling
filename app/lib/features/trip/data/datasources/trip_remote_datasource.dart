@@ -18,7 +18,14 @@ class TripRemoteDataSource {
   /// Active trips where the user is a passenger.
   Future<List<TripEntity>> getPassengerTrips({required bool active}) async {
     final statuses = active
-        ? ['pending', 'accepted', 'booked', 'in_progress', 'completed', 'payment_pending']
+        ? [
+            'pending',
+            'accepted',
+            'booked',
+            'in_progress',
+            'completed',
+            'payment_pending',
+          ]
         : ['payment_completed', 'cancelled', 'rejected'];
     final data = await _client
         .from('bookings')
@@ -190,8 +197,7 @@ class TripRemoteDataSource {
         .eq('ride_id', rideId)
         .order('created_at', ascending: true);
     return (data as List)
-        .map((e) =>
-            LifecycleEvent.fromMap(Map<String, dynamic>.from(e as Map)))
+        .map((e) => LifecycleEvent.fromMap(Map<String, dynamic>.from(e as Map)))
         .toList();
   }
 
@@ -199,18 +205,12 @@ class TripRemoteDataSource {
 
   /// Driver accepts a pending booking request.
   Future<void> acceptBooking(String bookingId) async {
-    await _client.rpc(
-      'accept_booking',
-      params: {'p_booking_id': bookingId},
-    );
+    await _client.rpc('accept_booking', params: {'p_booking_id': bookingId});
   }
 
   /// Driver rejects a pending booking request.
   Future<void> rejectBooking(String bookingId) async {
-    await _client.rpc(
-      'reject_booking',
-      params: {'p_booking_id': bookingId},
-    );
+    await _client.rpc('reject_booking', params: {'p_booking_id': bookingId});
   }
 
   // ---------- Half ride / early exit ----------
@@ -236,10 +236,7 @@ class TripRemoteDataSource {
 
   /// Driver rejects the early exit; ride continues as normal.
   Future<void> rejectEarlyExit(String bookingId) async {
-    await _client.rpc(
-      'reject_early_exit',
-      params: {'p_booking_id': bookingId},
-    );
+    await _client.rpc('reject_early_exit', params: {'p_booking_id': bookingId});
   }
 
   /// Passenger ends the ride early. Fare is proportionally reduced
@@ -252,10 +249,7 @@ class TripRemoteDataSource {
   }) async {
     await _client.rpc(
       'end_ride_early_auto',
-      params: {
-        'p_booking_id': bookingId,
-        'p_completed_km': completedKm,
-      },
+      params: {'p_booking_id': bookingId, 'p_completed_km': completedKm},
     );
   }
 }

@@ -7,8 +7,9 @@ import '../../domain/entities/notification_entity.dart';
 
 // --- DI ---
 
-final notificationDataSourceProvider =
-    Provider<NotificationRemoteDataSource>((ref) {
+final notificationDataSourceProvider = Provider<NotificationRemoteDataSource>((
+  ref,
+) {
   return NotificationRemoteDataSource(ref.read(supabaseClientProvider));
 });
 
@@ -16,8 +17,8 @@ final notificationDataSourceProvider =
 
 final notificationsProvider =
     FutureProvider.autoDispose<List<NotificationEntity>>((ref) async {
-  return ref.read(notificationDataSourceProvider).getNotifications();
-});
+      return ref.read(notificationDataSourceProvider).getNotifications();
+    });
 
 // --- Unread count ---
 
@@ -26,7 +27,9 @@ final unreadCountProvider = StateProvider<int>((ref) => 0);
 /// Booking IDs that were just accepted / rejected in this session. Used
 /// by the notification list to instantly hide the Accept / Reject buttons
 /// without waiting for the DB round-trip or realtime refresh.
-final handledBookingIdsProvider = StateProvider<Set<String>>((ref) => <String>{});
+final handledBookingIdsProvider = StateProvider<Set<String>>(
+  (ref) => <String>{},
+);
 
 // --- Realtime notification listener ---
 
@@ -43,19 +46,20 @@ class NotificationListenerNotifier extends StateNotifier<bool> {
     state = true;
 
     // Fetch initial unread count
-    final count =
-        await _ref.read(notificationDataSourceProvider).getUnreadCount();
+    final count = await _ref
+        .read(notificationDataSourceProvider)
+        .getUnreadCount();
     _ref.read(unreadCountProvider.notifier).state = count;
 
     // Subscribe to realtime
     _channel = _ref
         .read(notificationDataSourceProvider)
         .subscribeToNotifications((notification) {
-      // Increment badge
-      _ref.read(unreadCountProvider.notifier).state++;
-      // Invalidate the list so it re-fetches when viewed
-      _ref.invalidate(notificationsProvider);
-    });
+          // Increment badge
+          _ref.read(unreadCountProvider.notifier).state++;
+          // Invalidate the list so it re-fetches when viewed
+          _ref.invalidate(notificationsProvider);
+        });
   }
 
   Future<void> stop() async {
@@ -75,8 +79,8 @@ class NotificationListenerNotifier extends StateNotifier<bool> {
 
 final notificationListenerProvider =
     StateNotifierProvider<NotificationListenerNotifier, bool>((ref) {
-  return NotificationListenerNotifier(ref);
-});
+      return NotificationListenerNotifier(ref);
+    });
 
 // --- Notification actions ---
 
@@ -97,12 +101,10 @@ class NotificationActionNotifier
   final Ref _ref;
 
   NotificationActionNotifier(this._ref)
-      : super(const NotificationActionState());
+    : super(const NotificationActionState());
 
   Future<void> markAsRead(String notificationId) async {
-    await _ref
-        .read(notificationDataSourceProvider)
-        .markAsRead(notificationId);
+    await _ref.read(notificationDataSourceProvider).markAsRead(notificationId);
     final count = _ref.read(unreadCountProvider);
     if (count > 0) {
       _ref.read(unreadCountProvider.notifier).state = count - 1;
@@ -137,18 +139,18 @@ class NotificationActionNotifier
     _markHandled(bookingId);
     state = const NotificationActionState(isLoading: true);
     try {
-      await _ref
-          .read(notificationDataSourceProvider)
-          .acceptBooking(bookingId);
+      await _ref.read(notificationDataSourceProvider).acceptBooking(bookingId);
       _ref.invalidate(notificationsProvider);
       state = const NotificationActionState(
-          successMessage: 'Booking accepted successfully!');
+        successMessage: 'Booking accepted successfully!',
+      );
       return null;
     } catch (e) {
       // Roll back the optimistic update on error.
       final current = _ref.read(handledBookingIdsProvider);
-      _ref.read(handledBookingIdsProvider.notifier).state =
-          current.difference({bookingId});
+      _ref.read(handledBookingIdsProvider.notifier).state = current.difference({
+        bookingId,
+      });
       final msg = _friendlyError(e);
       state = NotificationActionState(errorMessage: msg);
       return msg;
@@ -159,17 +161,17 @@ class NotificationActionNotifier
     _markHandled(bookingId);
     state = const NotificationActionState(isLoading: true);
     try {
-      await _ref
-          .read(notificationDataSourceProvider)
-          .rejectBooking(bookingId);
+      await _ref.read(notificationDataSourceProvider).rejectBooking(bookingId);
       _ref.invalidate(notificationsProvider);
       state = const NotificationActionState(
-          successMessage: 'Booking rejected.');
+        successMessage: 'Booking rejected.',
+      );
       return null;
     } catch (e) {
       final current = _ref.read(handledBookingIdsProvider);
-      _ref.read(handledBookingIdsProvider.notifier).state =
-          current.difference({bookingId});
+      _ref.read(handledBookingIdsProvider.notifier).state = current.difference({
+        bookingId,
+      });
       final msg = _friendlyError(e);
       state = NotificationActionState(errorMessage: msg);
       return msg;
@@ -189,7 +191,8 @@ class NotificationActionNotifier
 }
 
 final notificationActionProvider =
-    StateNotifierProvider<NotificationActionNotifier, NotificationActionState>(
-        (ref) {
-  return NotificationActionNotifier(ref);
-});
+    StateNotifierProvider<NotificationActionNotifier, NotificationActionState>((
+      ref,
+    ) {
+      return NotificationActionNotifier(ref);
+    });

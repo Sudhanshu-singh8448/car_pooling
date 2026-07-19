@@ -38,7 +38,8 @@ export default function Layout() {
           <div className="user-name">{profile?.name || profile?.email}</div>
           <div className="user-role">Administrator</div>
           <button
-            className="btn btn-ghost"
+            className="btn white"
+            style={{ opacity: 100 }}
             onClick={() => {
               void supabase.auth.signOut();
             }}
