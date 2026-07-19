@@ -89,4 +89,12 @@ class TripRepository {
 
   Future<void> rejectEarlyExit(String bookingId) =>
       _dataSource.rejectEarlyExit(bookingId);
+
+  Future<void> endRideEarlyAuto({
+    required String bookingId,
+    required double completedKm,
+  }) => _dataSource.endRideEarlyAuto(
+        bookingId: bookingId,
+        completedKm: completedKm,
+      );
 }

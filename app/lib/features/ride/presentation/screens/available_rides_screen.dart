@@ -16,6 +16,12 @@ class AvailableRidesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(rideFormProvider);
+    // When the user has toggled "Recurring" and picked at least one day
+    // we show the recurring-suggestions view instead of the regular list.
+    if (form.isRecurring && form.recurringDays.isNotEmpty) {
+      return const _RecurringRidesView();
+    }
     final ridesAsync = ref.watch(availableRidesProvider);
     final bookingState = ref.watch(bookingActionProvider);
     final seats = ref.read(rideFormProvider).seats;
@@ -183,6 +189,213 @@ class AvailableRidesScreen extends ConsumerWidget {
             OutlinedButton(
               onPressed: () => context.pop(),
               child: const Text('Modify Search'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Recurring-ride suggestions grouped into "Exact Matches" (all requested
+/// weekdays present) and "Other Suggested Matches" (partial overlap).
+class _RecurringRidesView extends ConsumerWidget {
+  const _RecurringRidesView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(recurringRidesProvider);
+    final form = ref.watch(rideFormProvider);
+    final seats = form.seats;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Recurring Rides'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => ref.invalidate(recurringRidesProvider),
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+      body: async.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Text('Failed to load recurring rides: $e'),
+          ),
+        ),
+        data: (rides) {
+          if (rides.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.event_repeat_outlined,
+                        size: 64, color: AppColors.textTertiary),
+                    const SizedBox(height: AppSpacing.md),
+                    Text('No recurring rides found',
+                        style: AppTypography.h4),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Nobody is running a matching weekly ride yet. '
+                      'Try loosening the days or check back later.',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodySmall
+                          .copyWith(color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          final exact =
+              rides.where((r) => r['is_exact_match'] == true).toList();
+          final suggested = rides
+              .where((r) => r['is_exact_match'] != true)
+              .toList()
+            ..sort((a, b) => (b['match_count'] as int? ?? 0)
+                .compareTo(a['match_count'] as int? ?? 0));
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(recurringRidesProvider),
+            child: ListView(
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              children: [
+                if (exact.isNotEmpty) ...[
+                  Text('Exact Matches', style: AppTypography.h4),
+                  const SizedBox(height: AppSpacing.sm),
+                  ...exact.map((r) => _RecurringCard(data: r, seats: seats)),
+                  const SizedBox(height: AppSpacing.lg),
+                ] else ...[
+                  Text('No Exact Matches Found', style: AppTypography.h4),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+                if (suggested.isNotEmpty) ...[
+                  Text('Other Suggested Matches',
+                      style: AppTypography.labelLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  ...suggested
+                      .map((r) => _RecurringCard(data: r, seats: seats)),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _RecurringCard extends ConsumerWidget {
+  final Map<String, dynamic> data;
+  final int seats;
+  const _RecurringCard({required this.data, required this.seats});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final booking = ref.watch(bookingActionProvider);
+    final rideId = data['ride_id'] as String;
+    final days = (data['recurring_days'] as String? ?? '')
+        .split(',')
+        .where((d) => d.isNotEmpty)
+        .toList();
+    final fare = (data['fare_per_seat'] as num?)?.toDouble() ?? 0;
+    final matchCount = data['match_count'] as int? ?? 0;
+    final total = data['total_requested'] as int? ?? 0;
+    final isExact = data['is_exact_match'] == true;
+    final isBooking = booking.isLoading && booking.bookingRideId == rideId;
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${data['driver_name'] ?? 'Driver'} • '
+                    '${data['vehicle_model'] ?? ''}',
+                    style: AppTypography.labelLarge,
+                  ),
+                ),
+                if (isExact)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text('Exact',
+                        style: AppTypography.caption
+                            .copyWith(color: AppColors.success)),
+                  )
+                else
+                  Text('$matchCount / $total days',
+                      style: AppTypography.caption
+                          .copyWith(color: AppColors.textSecondary)),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text('${data['pickup_address'] ?? ''}  →  '
+                '${data['destination_address'] ?? ''}',
+                style: AppTypography.bodySmall),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: 4,
+              children: days
+                  .map((d) => Chip(
+                        label: Text(d.substring(0, 3).toUpperCase(),
+                            style: const TextStyle(fontSize: 11)),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize:
+                            MaterialTapTargetSize.shrinkWrap,
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                Text('₹${fare.toStringAsFixed(0)}/seat',
+                    style: AppTypography.labelMedium
+                        .copyWith(color: AppColors.primary)),
+                const Spacer(),
+                ElevatedButton(
+                  onPressed: isBooking
+                      ? null
+                      : () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final b = await ref
+                              .read(bookingActionProvider.notifier)
+                              .book(rideId, seats);
+                          if (context.mounted) {
+                            messenger.showSnackBar(SnackBar(
+                              content: Text(b == null
+                                  ? (ref
+                                          .read(bookingActionProvider)
+                                          .errorMessage ??
+                                      'Booking failed')
+                                  : 'Booking requested!'),
+                            ));
+                          }
+                        },
+                  child: isBooking
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child:
+                              CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Request'),
+                ),
+              ],
             ),
           ],
         ),

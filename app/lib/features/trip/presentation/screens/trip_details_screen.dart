@@ -597,21 +597,12 @@ class TripDetailsScreen extends ConsumerWidget {
           AppColors.primary,
           () async => context.push(RouteNames.liveTracking, extra: trip),
         );
-        // Half ride: end early option
+        // Half ride: end early with proportional fare
         addButton(
           'End Ride Early',
           Icons.exit_to_app_rounded,
           AppColors.warning,
-          () => _confirmAction(
-            context,
-            ref,
-            title: 'End Ride Early',
-            message:
-                'Request to end this ride early? The driver will set a revised fare.',
-            action: () => ref
-                .read(tripActionProvider.notifier)
-                .requestEarlyExit(trip.booking!.id),
-          ),
+          () => _promptEndEarlyDistance(context, ref, trip),
           outlined: true,
         );
       }
@@ -666,6 +657,79 @@ class TripDetailsScreen extends ConsumerWidget {
       }
     }
     return actions;
+  }
+
+  Future<void> _promptEndEarlyDistance(
+    BuildContext context,
+    WidgetRef ref,
+    TripEntity trip,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final fullKm = trip.ride.distanceKm ?? 0.0;
+    final fare = trip.booking?.totalFare ?? 0;
+    final controller = TextEditingController(
+      text: (fullKm > 0 ? fullKm / 2 : 1.0).toStringAsFixed(1),
+    );
+    final confirmed = await showDialog<double?>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('End Ride Early'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'How many kilometres of the ${fullKm.toStringAsFixed(1)} km trip have you actually travelled?',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  suffixText: 'km',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Full fare: ₹${fare.toStringAsFixed(0)}. '
+                'You will only be charged for the distance travelled.',
+                style: AppTypography.caption
+                    .copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, null),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final v = double.tryParse(controller.text.trim());
+                if (v == null || v <= 0) return;
+                Navigator.pop(ctx, v);
+              },
+              child: const Text('End Ride'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed == null) return;
+    final error = await ref
+        .read(tripActionProvider.notifier)
+        .endRideEarlyAuto(bookingId: trip.booking!.id, completedKm: confirmed);
+    if (error != null) {
+      messenger.showSnackBar(SnackBar(content: Text(error)));
+    } else {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Ride ended. Please complete payment.')),
+      );
+    }
   }
 
   Future<void> _confirmAction(

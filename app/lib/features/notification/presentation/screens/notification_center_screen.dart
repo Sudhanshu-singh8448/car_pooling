@@ -231,6 +231,20 @@ class _NotificationTile extends ConsumerWidget {
     final bookingId = notification.bookingId;
     if (bookingId == null) return const SizedBox.shrink();
 
+    // If this booking was already accepted / rejected in this session,
+    // hide the action buttons so the tile feels resolved immediately.
+    final handled = ref.watch(handledBookingIdsProvider);
+    if (handled.contains(bookingId)) {
+      return Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.xs),
+        child: Text(
+          'Handled',
+          style: AppTypography.caption
+              .copyWith(color: AppColors.textTertiary),
+        ),
+      );
+    }
+
     return Row(
       children: [
         Expanded(
@@ -303,10 +317,23 @@ class _NotificationTile extends ConsumerWidget {
           .read(notificationActionProvider.notifier)
           .markAsRead(notification.id);
     }
-    // Navigate based on deep link
+    // Navigate based on deep link. Only a small set of safe routes
+    // (that don't require typed `extra` objects) are honoured — anything
+    // else falls back to the My Trips screen so we never crash.
     final deepLink = notification.deepLink;
-    if (deepLink != null && deepLink.isNotEmpty) {
-      context.push(deepLink, extra: notification.data);
+    const safeRoutes = <String>{
+      '/my-trips',
+      '/wallet',
+      '/notifications',
+      '/dashboard',
+    };
+    if (deepLink != null && safeRoutes.contains(deepLink)) {
+      context.go(deepLink);
+    } else {
+      // Any legacy deep link (e.g. /trip-details, /payment-method,
+      // /live-tracking) needs a TripEntity we don't have here. Fall
+      // back to My Trips where the user can pick the trip.
+      context.go('/my-trips');
     }
   }
 

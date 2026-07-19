@@ -241,4 +241,21 @@ class TripRemoteDataSource {
       params: {'p_booking_id': bookingId},
     );
   }
+
+  /// Passenger ends the ride early. Fare is proportionally reduced
+  /// based on how many kilometres of the trip were actually completed.
+  /// Requires the SQL function `end_ride_early_auto` to be installed
+  /// (see `supabase/feature_fixes.sql`).
+  Future<void> endRideEarlyAuto({
+    required String bookingId,
+    required double completedKm,
+  }) async {
+    await _client.rpc(
+      'end_ride_early_auto',
+      params: {
+        'p_booking_id': bookingId,
+        'p_completed_km': completedKm,
+      },
+    );
+  }
 }

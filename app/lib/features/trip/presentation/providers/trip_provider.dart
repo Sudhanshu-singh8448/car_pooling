@@ -96,6 +96,18 @@ class TripActionNotifier extends StateNotifier<bool> {
   Future<String?> rejectEarlyExit(String bookingId) => _run(
     () => _ref.read(tripRepositoryProvider).rejectEarlyExit(bookingId),
   );
+
+  /// Passenger ends the ride early. Fare becomes proportional to
+  /// [completedKm] / total distance of the ride.
+  Future<String?> endRideEarlyAuto({
+    required String bookingId,
+    required double completedKm,
+  }) => _run(
+    () => _ref.read(tripRepositoryProvider).endRideEarlyAuto(
+          bookingId: bookingId,
+          completedKm: completedKm,
+        ),
+  );
 }
 
 final tripActionProvider = StateNotifierProvider<TripActionNotifier, bool>((

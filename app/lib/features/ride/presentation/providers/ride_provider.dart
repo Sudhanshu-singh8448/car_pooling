@@ -142,6 +142,22 @@ final availableRidesProvider = FutureProvider.autoDispose<List<RideMatch>>((
       );
 });
 
+// --- Recurring ride suggestions ---
+// Returns rides that repeat on the passenger's selected weekdays. Each
+// map has an `is_exact_match` bool + `match_count` int so the UI can
+// group results into "Exact Matches" and "Other Suggested Matches".
+final recurringRidesProvider =
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final form = ref.read(rideFormProvider);
+  if (!form.isValid || form.recurringDays.isEmpty) return const [];
+  return ref.read(rideRemoteDataSourceProvider).searchRecurringRides(
+        pickup: form.pickup!,
+        destination: form.destination!,
+        days: form.recurringDays.toList(),
+        seats: form.seats,
+      );
+});
+
 // --- Booking action ---
 
 class BookingActionState {

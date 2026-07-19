@@ -23,6 +23,11 @@ final notificationsProvider =
 
 final unreadCountProvider = StateProvider<int>((ref) => 0);
 
+/// Booking IDs that were just accepted / rejected in this session. Used
+/// by the notification list to instantly hide the Accept / Reject buttons
+/// without waiting for the DB round-trip or realtime refresh.
+final handledBookingIdsProvider = StateProvider<Set<String>>((ref) => <String>{});
+
 // --- Realtime notification listener ---
 
 /// Call this once when the dashboard loads to start listening for new
@@ -118,7 +123,18 @@ class NotificationActionNotifier
     _ref.invalidate(notificationsProvider);
   }
 
+  void _markHandled(String bookingId) {
+    final current = _ref.read(handledBookingIdsProvider);
+    _ref.read(handledBookingIdsProvider.notifier).state = {
+      ...current,
+      bookingId,
+    };
+  }
+
   Future<String?> acceptBooking(String bookingId) async {
+    // Optimistically hide the Accept / Reject buttons for this booking
+    // so the UI feels instant.
+    _markHandled(bookingId);
     state = const NotificationActionState(isLoading: true);
     try {
       await _ref
@@ -129,6 +145,10 @@ class NotificationActionNotifier
           successMessage: 'Booking accepted successfully!');
       return null;
     } catch (e) {
+      // Roll back the optimistic update on error.
+      final current = _ref.read(handledBookingIdsProvider);
+      _ref.read(handledBookingIdsProvider.notifier).state =
+          current.difference({bookingId});
       final msg = _friendlyError(e);
       state = NotificationActionState(errorMessage: msg);
       return msg;
@@ -136,6 +156,7 @@ class NotificationActionNotifier
   }
 
   Future<String?> rejectBooking(String bookingId) async {
+    _markHandled(bookingId);
     state = const NotificationActionState(isLoading: true);
     try {
       await _ref
@@ -146,6 +167,9 @@ class NotificationActionNotifier
           successMessage: 'Booking rejected.');
       return null;
     } catch (e) {
+      final current = _ref.read(handledBookingIdsProvider);
+      _ref.read(handledBookingIdsProvider.notifier).state =
+          current.difference({bookingId});
       final msg = _friendlyError(e);
       state = NotificationActionState(errorMessage: msg);
       return msg;
