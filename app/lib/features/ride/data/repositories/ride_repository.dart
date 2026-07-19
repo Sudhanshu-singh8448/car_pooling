@@ -1,7 +1,10 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../core/services/maps_service.dart';
 import '../datasources/ride_remote_datasource.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../../domain/entities/location_point.dart';
+import '../../domain/entities/recurring_ride_entity.dart';
 import '../../domain/entities/ride_entity.dart';
 import '../../domain/entities/ride_match.dart';
 
@@ -22,6 +25,9 @@ class RideRepository {
     int? durationMinutes,
     bool isRecurring = false,
     String? recurringDays,
+    int tripsPerWeek = 1,
+    DateTime? recurrenceStartDate,
+    DateTime? recurrenceEndDate,
   }) => _dataSource.publishRide(
     vehicleId: vehicleId,
     pickup: pickup,
@@ -34,6 +40,9 @@ class RideRepository {
     durationMinutes: durationMinutes,
     isRecurring: isRecurring,
     recurringDays: recurringDays,
+    tripsPerWeek: tripsPerWeek,
+    recurrenceStartDate: recurrenceStartDate,
+    recurrenceEndDate: recurrenceEndDate,
   );
 
   Future<List<RideMatch>> searchRides({
@@ -167,4 +176,122 @@ class RideRepository {
     required String rideId,
     required int seats,
   }) => _dataSource.bookRide(rideId: rideId, seats: seats);
+
+  Future<List<RecurringRideMatch>> searchRecurringRides({
+    required LocationPoint pickup,
+    required LocationPoint destination,
+    required List<String> days,
+    required DateTime date,
+    required int seats,
+    int? tripsPerWeek,
+    double? maxFare,
+    String? vehicleId,
+    double radiusKm = 5,
+    int limit = 50,
+    int offset = 0,
+  }) => _dataSource.searchRecurringRides(
+    pickup: pickup,
+    destination: destination,
+    days: days,
+    date: date,
+    seats: seats,
+    tripsPerWeek: tripsPerWeek,
+    maxFare: maxFare,
+    vehicleId: vehicleId,
+    radiusKm: radiusKm,
+    limit: limit,
+    offset: offset,
+  );
+
+  Future<List<RecurringRideMatch>> getExactRecurringRides({
+    required LocationPoint pickup,
+    required LocationPoint destination,
+    required List<String> days,
+    required DateTime date,
+    required int seats,
+    int? tripsPerWeek,
+    double? maxFare,
+    String? vehicleId,
+    double radiusKm = 5,
+  }) async {
+    final matches = await searchRecurringRides(
+      pickup: pickup,
+      destination: destination,
+      days: days,
+      date: date,
+      seats: seats,
+      tripsPerWeek: tripsPerWeek,
+      maxFare: maxFare,
+      vehicleId: vehicleId,
+      radiusKm: radiusKm,
+    );
+    return matches.where((match) => match.isExactMatch).toList();
+  }
+
+  Future<List<RecurringRideMatch>> getSuggestedRecurringRides({
+    required LocationPoint pickup,
+    required LocationPoint destination,
+    required List<String> days,
+    required DateTime date,
+    required int seats,
+    int? tripsPerWeek,
+    double? maxFare,
+    String? vehicleId,
+    double radiusKm = 5,
+  }) async {
+    final matches = await searchRecurringRides(
+      pickup: pickup,
+      destination: destination,
+      days: days,
+      date: date,
+      seats: seats,
+      tripsPerWeek: tripsPerWeek,
+      maxFare: maxFare,
+      vehicleId: vehicleId,
+      radiusKm: radiusKm,
+    );
+    return matches.where((match) => !match.isExactMatch).toList();
+  }
+
+  int calculateRecurringMatchScore({
+    required List<String> requestedDays,
+    required List<String> rideDays,
+  }) {
+    final requested = requestedDays.map((day) => day.toLowerCase()).toSet();
+    return rideDays
+        .map((day) => day.toLowerCase())
+        .where(requested.contains)
+        .toSet()
+        .length;
+  }
+
+  Future<RecurringRideEntity> upsertRecurringRide({
+    required String rideId,
+    required List<String> recurrenceDays,
+    required int tripsPerWeek,
+    required DateTime startDate,
+    DateTime? endDate,
+    bool isActive = true,
+  }) => _dataSource.upsertRecurringRide(
+    rideId: rideId,
+    recurrenceDays: recurrenceDays,
+    tripsPerWeek: tripsPerWeek,
+    startDate: startDate,
+    endDate: endDate,
+    isActive: isActive,
+  );
+
+  Future<RecurringRideEntity> setRecurringRideActive({
+    required String rideId,
+    required bool isActive,
+  }) => _dataSource.setRecurringRideActive(rideId: rideId, isActive: isActive);
+
+  Future<void> deleteRecurringRide(String rideId) =>
+      _dataSource.deleteRecurringRide(rideId);
+
+  RealtimeChannel subscribeToRecurringRideChanges(void Function() onChanged) =>
+      _dataSource.subscribeToRecurringRideChanges(onChanged);
+
+  Future<void> unsubscribe(RealtimeChannel channel) =>
+      _dataSource.unsubscribe(channel);
 }

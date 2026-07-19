@@ -23,7 +23,6 @@ class DashboardHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
-  static const _weekdays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
   final _fareController = TextEditingController();
 
   @override
@@ -67,9 +66,11 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
             _buildFareField(),
             const SizedBox(height: AppSpacing.lg),
             _buildVehicleSelector(form),
+            const SizedBox(height: AppSpacing.lg),
+            _buildRecurringSection(form, isOffer: true),
           ] else ...[
             const SizedBox(height: AppSpacing.lg),
-            _buildRecurringSection(form),
+            _buildRecurringSection(form, isOffer: false),
           ],
           const SizedBox(height: AppSpacing.xxl),
           SizedBox(
@@ -343,7 +344,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
     );
   }
 
-  Widget _buildRecurringSection(RideFormState form) {
+  Widget _buildRecurringSection(RideFormState form, {required bool isOffer}) {
     final notifier = ref.read(rideFormProvider.notifier);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,26 +363,122 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: AppSpacing.sm,
-            children: _weekdays.map((day) {
-              final selected = form.recurringDays.contains(day);
-              return FilterChip(
-                label: Text(
-                  day,
-                  style: AppTypography.caption.copyWith(
-                    color: selected ? AppColors.white : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                selected: selected,
-                selectedColor: AppColors.primary,
-                showCheckmark: false,
-                onSelected: (_) => notifier.toggleRecurringDay(day),
-              );
-            }).toList(),
+            runSpacing: AppSpacing.xs,
+            children:
+                const [
+                  'Monday',
+                  'Tuesday',
+                  'Wednesday',
+                  'Thursday',
+                  'Friday',
+                  'Saturday',
+                  'Sunday',
+                ].map((day) {
+                  final selected = form.recurringDays.contains(day);
+                  return FilterChip(
+                    label: Text(
+                      day,
+                      style: AppTypography.caption.copyWith(
+                        color: selected
+                            ? AppColors.white
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    selected: selected,
+                    selectedColor: AppColors.primary,
+                    showCheckmark: false,
+                    onSelected: (_) => notifier.toggleRecurringDay(day),
+                  );
+                }).toList(),
           ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<int?>(
+                  initialValue: isOffer
+                      ? form.tripsPerWeek
+                      : form.recurringTripsPerWeekFilter,
+                  decoration: const InputDecoration(
+                    labelText: 'Trips per week',
+                    prefixIcon: Icon(Icons.repeat),
+                  ),
+                  hint: isOffer ? null : const Text('Any'),
+                  items: [
+                    if (!isOffer)
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Any'),
+                      ),
+                    ...List.generate(
+                      7,
+                      (index) => DropdownMenuItem<int?>(
+                        value: index + 1,
+                        child: Text('${index + 1}'),
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (isOffer && value != null) {
+                      notifier.setTripsPerWeek(value);
+                    } else if (!isOffer) {
+                      notifier.setRecurringTripsPerWeekFilter(value);
+                    }
+                  },
+                ),
+              ),
+              if (isOffer) ...[
+                const SizedBox(width: AppSpacing.md),
+                Expanded(child: _dateField(form, isStart: true)),
+              ],
+            ],
+          ),
+          if (isOffer) ...[
+            const SizedBox(height: AppSpacing.md),
+            _dateField(form, isStart: false),
+          ],
         ],
       ],
     );
+  }
+
+  Widget _dateField(RideFormState form, {required bool isStart}) {
+    final date = isStart ? form.recurrenceStartDate : form.recurrenceEndDate;
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      onTap: () => _pickRecurrenceDate(form, isStart: isStart),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: isStart ? 'Start date (optional)' : 'End date (optional)',
+          prefixIcon: const Icon(Icons.event_outlined),
+        ),
+        child: Text(
+          date == null ? 'Not set' : DateFormat('d MMM yyyy').format(date),
+          style: AppTypography.bodyMedium,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickRecurrenceDate(
+    RideFormState form, {
+    required bool isStart,
+  }) async {
+    final current = isStart ? form.recurrenceStartDate : form.recurrenceEndDate;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current ?? form.departureTime,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (!mounted || picked == null) return;
+    final notifier = ref.read(rideFormProvider.notifier);
+    if (isStart) {
+      notifier.setRecurrenceStartDate(picked);
+    } else {
+      notifier.setRecurrenceEndDate(picked);
+    }
   }
 
   void _onSubmit(RideFormState form) {
@@ -390,6 +487,20 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
       messenger.showSnackBar(
         const SnackBar(
           content: Text('Please select both start and destination locations.'),
+        ),
+      );
+      return;
+    }
+    if (!form.recurrenceIsValid) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            form.recurringDays.isEmpty
+                ? 'Select at least one recurring weekday.'
+                : form.tripsPerWeek > form.recurringDays.length
+                ? 'Trips per week cannot exceed selected weekdays.'
+                : 'Please check the recurring date range.',
+          ),
         ),
       );
       return;

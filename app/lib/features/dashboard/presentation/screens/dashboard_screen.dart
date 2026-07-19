@@ -258,10 +258,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 color: AppColors.error,
                 shape: BoxShape.circle,
               ),
-              constraints: const BoxConstraints(
-                minWidth: 18,
-                minHeight: 18,
-              ),
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
               child: Text(
                 unreadCount > 9 ? '9+' : '$unreadCount',
                 style: const TextStyle(

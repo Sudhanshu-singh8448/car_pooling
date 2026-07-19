@@ -83,10 +83,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
             Center(
-              child: Text(
-                'Personal information',
-                style: AppTypography.h4,
-              ),
+              child: Text('Personal information', style: AppTypography.h4),
             ),
             const SizedBox(height: AppSpacing.xl),
             _field(
@@ -193,10 +190,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       keyboardType: keyboardType,
       textInputAction: TextInputAction.next,
       validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-      ),
+      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
     );
   }
 
@@ -208,7 +202,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final oldEmail = currentUser.email.trim().toLowerCase();
     final newEmail = _emailController.text.trim().toLowerCase();
-    final error = await ref.read(authNotifierProvider.notifier).updateProfile(
+    final error = await ref
+        .read(authNotifierProvider.notifier)
+        .updateProfile(
           name: _nameController.text,
           email: _emailController.text,
           phone: _phoneController.text,

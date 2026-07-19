@@ -7,6 +7,7 @@ import '../../../../core/constants/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../domain/entities/recurring_ride_entity.dart';
 import '../providers/ride_provider.dart';
 import '../widgets/ride_card.dart';
 
@@ -258,15 +259,8 @@ class _RecurringRidesView extends ConsumerWidget {
               ),
             );
           }
-          final exact = rides
-              .where((r) => r['is_exact_match'] == true)
-              .toList();
-          final suggested =
-              rides.where((r) => r['is_exact_match'] != true).toList()..sort(
-                (a, b) => (b['match_count'] as int? ?? 0).compareTo(
-                  a['match_count'] as int? ?? 0,
-                ),
-              );
+          final exact = rides.where((r) => r.isExactMatch).toList();
+          final suggested = rides.where((r) => !r.isExactMatch).toList();
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(recurringRidesProvider),
             child: ListView(
@@ -275,7 +269,7 @@ class _RecurringRidesView extends ConsumerWidget {
                 if (exact.isNotEmpty) ...[
                   Text('Exact Matches', style: AppTypography.h4),
                   const SizedBox(height: AppSpacing.sm),
-                  ...exact.map((r) => _RecurringCard(data: r, seats: seats)),
+                  ...exact.map((r) => _RecurringCard(match: r, seats: seats)),
                   const SizedBox(height: AppSpacing.lg),
                 ] else ...[
                   Text('No Exact Matches Found', style: AppTypography.h4),
@@ -288,7 +282,7 @@ class _RecurringRidesView extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   ...suggested.map(
-                    (r) => _RecurringCard(data: r, seats: seats),
+                    (r) => _RecurringCard(match: r, seats: seats),
                   ),
                 ],
               ],
@@ -301,22 +295,15 @@ class _RecurringRidesView extends ConsumerWidget {
 }
 
 class _RecurringCard extends ConsumerWidget {
-  final Map<String, dynamic> data;
+  final RecurringRideMatch match;
   final int seats;
-  const _RecurringCard({required this.data, required this.seats});
+  const _RecurringCard({required this.match, required this.seats});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final booking = ref.watch(bookingActionProvider);
-    final rideId = data['ride_id'] as String;
-    final days = (data['recurring_days'] as String? ?? '')
-        .split(',')
-        .where((d) => d.isNotEmpty)
-        .toList();
-    final fare = (data['fare_per_seat'] as num?)?.toDouble() ?? 0;
-    final matchCount = data['match_count'] as int? ?? 0;
-    final total = data['total_requested'] as int? ?? 0;
-    final isExact = data['is_exact_match'] == true;
+    final ride = match.ride;
+    final rideId = ride.id;
     final isBooking = booking.isLoading && booking.bookingRideId == rideId;
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -329,12 +316,30 @@ class _RecurringCard extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '${data['driver_name'] ?? 'Driver'} • '
-                    '${data['vehicle_model'] ?? ''}',
+                    '${ride.driverName.isEmpty ? 'Driver' : ride.driverName} • '
+                    '${ride.vehicleModel}',
                     style: AppTypography.labelLarge,
                   ),
                 ),
-                if (isExact)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Recurring Ride',
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                if (match.isExactMatch)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -353,7 +358,7 @@ class _RecurringCard extends ConsumerWidget {
                   )
                 else
                   Text(
-                    '$matchCount / $total days',
+                    '${match.matchCount} / ${match.totalRequested} days',
                     style: AppTypography.caption.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -362,20 +367,37 @@ class _RecurringCard extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              '${data['pickup_address'] ?? ''}  →  '
-              '${data['destination_address'] ?? ''}',
+              '${ride.pickup.address}  →  ${ride.destination.address}',
               style: AppTypography.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                const Icon(
+                  Icons.event_repeat,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Repeats ${match.recurrenceDays.join(', ')}',
+                  style: AppTypography.caption,
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.xs),
             Wrap(
               spacing: 4,
-              children: days
+              children: match.requestedDays
                   .map(
                     (d) => Chip(
                       label: Text(
-                        d.substring(0, 3).toUpperCase(),
+                        '${match.matchingDays.contains(d) ? '✓ ' : '✕ '}${d.substring(0, 3)}',
                         style: const TextStyle(fontSize: 11),
                       ),
+                      backgroundColor: match.matchingDays.contains(d)
+                          ? AppColors.success.withValues(alpha: 0.12)
+                          : AppColors.surfaceVariant,
                       visualDensity: VisualDensity.compact,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -386,7 +408,7 @@ class _RecurringCard extends ConsumerWidget {
             Row(
               children: [
                 Text(
-                  '₹${fare.toStringAsFixed(0)}/seat',
+                  '₹${ride.farePerSeat.toStringAsFixed(0)}/seat',
                   style: AppTypography.labelMedium.copyWith(
                     color: AppColors.primary,
                   ),
@@ -424,6 +446,14 @@ class _RecurringCard extends ConsumerWidget {
                       : const Text('Request'),
                 ),
               ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '${match.matchPercentage.toStringAsFixed(0)}% Match • '
+              '${match.tripsPerWeek} trip${match.tripsPerWeek == 1 ? '' : 's'} per week',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),

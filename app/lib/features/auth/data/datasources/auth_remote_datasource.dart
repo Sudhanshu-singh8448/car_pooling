@@ -175,14 +175,12 @@ class AuthRemoteDataSource {
       throw Exception('Not authenticated');
     }
 
-    final emailChanged = normalizedEmail != (authUser.email ?? '').toLowerCase();
+    final emailChanged =
+        normalizedEmail != (authUser.email ?? '').toLowerCase();
     await _client.auth.updateUser(
       UserAttributes(
         email: emailChanged ? normalizedEmail : null,
-        data: {
-          'name': name.trim(),
-          'phone': phone.trim(),
-        },
+        data: {'name': name.trim(), 'phone': phone.trim()},
       ),
     );
 

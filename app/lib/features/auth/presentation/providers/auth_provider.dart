@@ -132,7 +132,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return null;
     } catch (e) {
       final error = e.toString().toLowerCase();
-      final message = error.contains('email') &&
+      final message =
+          error.contains('email') &&
               (error.contains('invalid') || error.contains('already'))
           ? 'That email address cannot be used.'
           : 'Could not update your profile. Please try again.';

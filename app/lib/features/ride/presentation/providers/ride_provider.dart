@@ -5,6 +5,7 @@ import '../../data/datasources/ride_remote_datasource.dart';
 import '../../data/repositories/ride_repository.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../../domain/entities/location_point.dart';
+import '../../domain/entities/recurring_ride_entity.dart';
 import '../../domain/entities/ride_entity.dart';
 import '../../domain/entities/ride_match.dart';
 
@@ -33,6 +34,10 @@ class RideFormState {
   final double farePerSeat;
   final bool isRecurring;
   final Set<String> recurringDays;
+  final int tripsPerWeek;
+  final int? recurringTripsPerWeekFilter;
+  final DateTime? recurrenceStartDate;
+  final DateTime? recurrenceEndDate;
   final String? vehicleId;
 
   RideFormState({
@@ -44,11 +49,23 @@ class RideFormState {
     this.farePerSeat = 0,
     this.isRecurring = false,
     this.recurringDays = const {},
+    this.tripsPerWeek = 1,
+    this.recurringTripsPerWeekFilter,
+    this.recurrenceStartDate,
+    this.recurrenceEndDate,
     this.vehicleId,
   }) : departureTime =
            departureTime ?? DateTime.now().add(const Duration(hours: 1));
 
   bool get isValid => pickup != null && destination != null;
+  bool get recurrenceIsValid =>
+      !isRecurring ||
+      (recurringDays.isNotEmpty &&
+          tripsPerWeek >= 1 &&
+          tripsPerWeek <= recurringDays.length &&
+          (recurrenceEndDate == null ||
+              recurrenceStartDate == null ||
+              !recurrenceEndDate!.isBefore(recurrenceStartDate!)));
 
   RideFormState copyWith({
     RideMode? mode,
@@ -59,6 +76,12 @@ class RideFormState {
     double? farePerSeat,
     bool? isRecurring,
     Set<String>? recurringDays,
+    int? tripsPerWeek,
+    int? recurringTripsPerWeekFilter,
+    DateTime? recurrenceStartDate,
+    DateTime? recurrenceEndDate,
+    bool clearRecurrenceStartDate = false,
+    bool clearRecurrenceEndDate = false,
     String? vehicleId,
   }) {
     return RideFormState(
@@ -70,6 +93,15 @@ class RideFormState {
       farePerSeat: farePerSeat ?? this.farePerSeat,
       isRecurring: isRecurring ?? this.isRecurring,
       recurringDays: recurringDays ?? this.recurringDays,
+      tripsPerWeek: tripsPerWeek ?? this.tripsPerWeek,
+      recurringTripsPerWeekFilter:
+          recurringTripsPerWeekFilter ?? this.recurringTripsPerWeekFilter,
+      recurrenceStartDate: clearRecurrenceStartDate
+          ? null
+          : (recurrenceStartDate ?? this.recurrenceStartDate),
+      recurrenceEndDate: clearRecurrenceEndDate
+          ? null
+          : (recurrenceEndDate ?? this.recurrenceEndDate),
       vehicleId: vehicleId ?? this.vehicleId,
     );
   }
@@ -96,6 +128,35 @@ class RideFormNotifier extends StateNotifier<RideFormState> {
     days.contains(day) ? days.remove(day) : days.add(day);
     state = state.copyWith(recurringDays: days);
   }
+
+  void setTripsPerWeek(int trips) =>
+      state = state.copyWith(tripsPerWeek: trips.clamp(1, 7).toInt());
+
+  void setRecurringTripsPerWeekFilter(int? trips) {
+    state = RideFormState(
+      mode: state.mode,
+      pickup: state.pickup,
+      destination: state.destination,
+      departureTime: state.departureTime,
+      seats: state.seats,
+      farePerSeat: state.farePerSeat,
+      isRecurring: state.isRecurring,
+      recurringDays: state.recurringDays,
+      tripsPerWeek: state.tripsPerWeek,
+      recurringTripsPerWeekFilter: trips,
+      recurrenceStartDate: state.recurrenceStartDate,
+      recurrenceEndDate: state.recurrenceEndDate,
+      vehicleId: state.vehicleId,
+    );
+  }
+
+  void setRecurrenceStartDate(DateTime? date) => state = date == null
+      ? state.copyWith(clearRecurrenceStartDate: true)
+      : state.copyWith(recurrenceStartDate: date);
+
+  void setRecurrenceEndDate(DateTime? date) => state = date == null
+      ? state.copyWith(clearRecurrenceEndDate: true)
+      : state.copyWith(recurrenceEndDate: date);
 
   void swapLocations() {
     final pickup = state.pickup;
@@ -147,17 +208,22 @@ final availableRidesProvider = FutureProvider.autoDispose<List<RideMatch>>((
 // map has an `is_exact_match` bool + `match_count` int so the UI can
 // group results into "Exact Matches" and "Other Suggested Matches".
 final recurringRidesProvider =
-    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+    FutureProvider.autoDispose<List<RecurringRideMatch>>((ref) async {
       final form = ref.read(rideFormProvider);
       if (!form.isValid || form.recurringDays.isEmpty) return const [];
-      return ref
-          .read(rideRemoteDataSourceProvider)
-          .searchRecurringRides(
-            pickup: form.pickup!,
-            destination: form.destination!,
-            days: form.recurringDays.toList(),
-            seats: form.seats,
-          );
+      final repository = ref.read(rideRepositoryProvider);
+      final channel = repository.subscribeToRecurringRideChanges(
+        ref.invalidateSelf,
+      );
+      ref.onDispose(() => repository.unsubscribe(channel));
+      return repository.searchRecurringRides(
+        pickup: form.pickup!,
+        destination: form.destination!,
+        days: form.recurringDays.toList(),
+        date: form.departureTime,
+        seats: form.seats,
+        tripsPerWeek: form.recurringTripsPerWeekFilter,
+      );
     });
 
 // --- Booking action ---
@@ -255,6 +321,9 @@ class PublishNotifier extends StateNotifier<PublishState> {
         recurringDays: form.recurringDays.isEmpty
             ? null
             : form.recurringDays.join(','),
+        tripsPerWeek: form.tripsPerWeek,
+        recurrenceStartDate: form.recurrenceStartDate,
+        recurrenceEndDate: form.recurrenceEndDate,
       );
       state = PublishState(publishedRide: ride);
       return ride;
